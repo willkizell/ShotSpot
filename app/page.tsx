@@ -14,6 +14,12 @@ export default function MarketplacePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:divide-x-2 lg:divide-black">
             {/* Left: find a coach */}
             <div className="py-12 lg:pr-12 flex flex-col justify-center">
+              <p
+                className="text-xs uppercase tracking-widest text-black/40 mb-4"
+                style={{ fontFamily: "var(--font-anton)" }}
+              >
+                Are you an athlete?
+              </p>
               <h1
                 className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl tracking-tight leading-none mb-5"
                 style={{ fontFamily: "var(--font-anton)" }}
@@ -24,7 +30,7 @@ export default function MarketplacePage() {
                 Browse qualified coaches for shot put, discus, hammer, and javelin.
                 Real coaching. Real delivery. No middlemen.
               </p>
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-3">
                 <Link
                   href="/athlete-signup"
                   className="border-2 border-black bg-black text-[#D7D7D7] px-6 py-3 text-sm font-semibold hover:bg-[#007B6F] hover:border-[#007B6F] transition-colors"
@@ -52,13 +58,13 @@ export default function MarketplacePage() {
                 className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl tracking-tight leading-none mb-5"
                 style={{ fontFamily: "var(--font-anton)" }}
               >
-                BUILD YOUR REMOTE <span className="text-[#007B6F]">ROSTER HERE</span>
+                BUILD YOUR REMOTE <span className="text-[#007B6F]">ROSTER</span>
               </h2>
               <p className="text-base text-black/70 max-w-md mb-8">
                 Set up your profile, publish your offers, and get paid. Training plans,
                 video review, and messaging — all in one place.
               </p>
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-3">
                 <Link
                   href="/coach-signup"
                   className="border-2 border-black bg-black text-[#D7D7D7] px-6 py-3 text-sm font-semibold hover:bg-[#007B6F] hover:border-[#007B6F] transition-colors"
