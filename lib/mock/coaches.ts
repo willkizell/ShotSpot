@@ -1,5 +1,29 @@
 import type { CoachCardData } from "@/components/ui/CoachCard";
 
+// Featured coaches occupy the premium placement slot above the grid.
+// In production this is driven by the featured_placements table (see docs/migrations/002_featured_placements.sql).
+export const MOCK_FEATURED_COACH: CoachCardData = {
+  id: "coach-featured",
+  full_name: "James Okafor",
+  avatar_url: null,
+  location: "Atlanta, GA",
+  remote: true,
+  headline:
+    "20 years coaching throws at the D1 and professional level. Athletes have competed at the Olympic Games and World Championships. I take 2-3 new remote athletes per year — apply if you're serious.",
+  organization: "Okafor Track & Field",
+  events: ["shot_put", "discus", "hammer"],
+  years_coaching: 20,
+  intake_mode: "application_required",
+  starting_price: 500,
+  billing_cadence: "monthly",
+  availability: "limited",
+  athlete_count: 14,
+  athlete_capacity: 16,
+  response_time: "72hr",
+  proof_tags: ["Olympic Games", "World Championships", "D1 head coach"],
+  has_elite_athletes: true,
+};
+
 export const MOCK_COACHES: CoachCardData[] = [
   {
     id: "coach-1",
@@ -60,26 +84,6 @@ export const MOCK_COACHES: CoachCardData[] = [
     response_time: "24hr",
     proof_tags: ["NCAA All-American", "High school specialists", "Recruiting support"],
     has_elite_athletes: false,
-  },
-  {
-    id: "coach-4",
-    full_name: "James Okafor",
-    avatar_url: null,
-    location: "Atlanta, GA",
-    remote: false,
-    headline: "Multi-event throws coach with 20 years of experience at the D1 and professional level. In-person sessions available in Atlanta. Remote programming for serious athletes only.",
-    organization: "Okafor Track & Field",
-    events: ["shot_put", "discus", "hammer"],
-    years_coaching: 20,
-    intake_mode: "application_required",
-    starting_price: 500,
-    billing_cadence: "monthly",
-    availability: "waitlist",
-    athlete_count: 16,
-    athlete_capacity: 16,
-    response_time: "72hr",
-    proof_tags: ["Olympic Games", "World Championships", "D1 head coach"],
-    has_elite_athletes: true,
   },
   {
     id: "coach-5",

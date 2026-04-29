@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/ui/Logo";
 import {
   LayoutDashboard,
   Users,
@@ -32,13 +33,7 @@ export function CoachSidebar() {
   return (
     <aside className="w-56 border-r-2 border-black min-h-screen flex-shrink-0 bg-[#D7D7D7]">
       <div className="p-4 border-b-2 border-black">
-        <Link
-          href="/"
-          className="text-xl tracking-tight"
-          style={{ fontFamily: "var(--font-anton)" }}
-        >
-          SHOTSPOT
-        </Link>
+        <Logo size="sm" />
         <p className="text-xs text-black/50 mt-0.5 uppercase tracking-wider">Coach</p>
       </div>
       <nav className="p-3 space-y-0.5">
