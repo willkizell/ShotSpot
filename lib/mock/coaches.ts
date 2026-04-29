@@ -9,7 +9,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     location: "Atlanta, GA",
     remote: true,
     headline:
-      "20 years coaching throws at the D1 and professional level. Athletes have competed at the Olympic Games and World Championships. I take 2-3 new remote athletes per year — apply only if you're serious about competing at the highest level.",
+      "20 years at the D1 and professional level. Olympic Games and World Championship athletes. I take 2–3 new remote athletes per year — apply if you're serious.",
     organization: "Okafor Track & Field",
     events: ["shot_put", "discus", "hammer"],
     years_coaching: 20,
@@ -32,8 +32,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/45.jpg",
     location: "Eugene, OR",
     remote: true,
-    headline:
-      "15 years coaching shot put and discus at the collegiate and elite level. Athletes have thrown 20m+ in shot and 65m+ in discus under my programming.",
+    headline: "15 years at the collegiate and elite level. Athletes have thrown 20m+ in shot and 65m+ in discus under my programming.",
     organization: "Webb Throws Academy",
     events: ["shot_put", "discus"],
     years_coaching: 15,
@@ -53,8 +52,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/68.jpg",
     location: "Colorado Springs, CO",
     remote: true,
-    headline:
-      "Hammer and weight specialist. USATF certified. I work with high school and collegiate athletes who want structured programming and consistent video review.",
+    headline: "USATF-certified hammer specialist. Structured programming and weekly video review for high school and collegiate throwers.",
     organization: "Rocky Mountain Throws",
     events: ["hammer"],
     years_coaching: 9,
@@ -74,8 +72,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/44.jpg",
     location: "Austin, TX",
     remote: true,
-    headline:
-      "Javelin coach and former NCAA All-American. I specialize in technical development for high school athletes and the transition to college-level throwing.",
+    headline: "Former NCAA All-American javelin thrower. I specialize in technical development and helping high school athletes make the jump to college.",
     organization: null,
     events: ["javelin"],
     years_coaching: 7,
@@ -95,8 +92,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/55.jpg",
     location: "Denver, CO",
     remote: true,
-    headline:
-      "Discus-first coach with a background in biomechanics. I break down technique frame by frame using video analysis and build programs around each athlete's physical profile.",
+    headline: "Discus specialist with a biomechanics background. Frame-by-frame video analysis and programs built around each athlete's physical profile.",
     organization: "Fountain Athletics",
     events: ["discus", "shot_put"],
     years_coaching: 11,
@@ -116,8 +112,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/22.jpg",
     location: "Minneapolis, MN",
     remote: true,
-    headline:
-      "Youth and high school throws coach. I help beginner to intermediate throwers build solid technique and consistent training habits across all four events.",
+    headline: "Youth and high school coach for all four throws. I help beginners and intermediate throwers build technique and consistent habits.",
     organization: "Midwest Throws Collective",
     events: ["shot_put", "discus", "hammer", "javelin"],
     years_coaching: 5,
@@ -137,8 +132,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/12.jpg",
     location: "Portland, OR",
     remote: true,
-    headline:
-      "Video critique specialist. Send me your throws and I'll send back annotated feedback within 48 hours. No subscription required — pay per review or grab a monthly package.",
+    headline: "Video critique specialist. Send your throws, get annotated feedback back within 48 hours. Pay per review or monthly — no commitment.",
     organization: null,
     events: ["discus", "shot_put"],
     years_coaching: 12,
@@ -158,8 +152,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/78.jpg",
     location: "Seattle, WA",
     remote: true,
-    headline:
-      "Eastern European throwing methodology applied to American athletes. Former national-level hammer thrower turned coach. My athletes consistently add 5–8m in their first season.",
+    headline: "Former national-level hammer thrower applying Eastern European methodology to American athletes. My throwers consistently add 5–8m in their first season.",
     organization: "Petrov Throws Lab",
     events: ["hammer", "discus"],
     years_coaching: 14,
@@ -179,8 +172,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/55.jpg",
     location: "Chicago, IL",
     remote: true,
-    headline:
-      "High-energy coach for youth and teen throwers. I focus on making training fun, building athletic confidence, and laying the technical foundation before athletes enter competitive seasons.",
+    headline: "High-energy coach for youth and teen throwers. Training is fun, confidence is built early, and technique comes first before competition.",
     organization: "Brooks Youth Athletics",
     events: ["shot_put", "discus", "javelin"],
     years_coaching: 6,
@@ -202,8 +194,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/33.jpg",
     location: "Los Angeles, CA",
     remote: true,
-    headline:
-      "18 years coaching shot put and discus at the NCAA D1 level and with USA Track & Field. Three of my athletes have thrown at the U.S. Olympic Trials. I currently take a small number of remote athletes — serious inquiries only.",
+    headline: "18 years at the NCAA D1 level and with USA Track & Field. Three athletes at the U.S. Olympic Trials. Small remote roster — serious inquiries only.",
     organization: "Vasquez Performance",
     events: ["shot_put", "discus"],
     years_coaching: 18,
@@ -226,8 +217,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/22.jpg",
     location: "Nashville, TN",
     remote: true,
-    headline:
-      "Javelin and multi-event specialist. Former college thrower with a focus on shoulder health, approach mechanics, and maximizing carry distance for athletes at every level.",
+    headline: "Javelin and multi-event specialist. Former college thrower focused on shoulder health, approach mechanics, and maximizing carry distance.",
     organization: null,
     events: ["javelin"],
     years_coaching: 8,
@@ -247,8 +237,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/41.jpg",
     location: "Phoenix, AZ",
     remote: true,
-    headline:
-      "Shot put coach with a strength and conditioning background. I design full training blocks — lifting, throwing, and recovery — so athletes peak at the right time.",
+    headline: "Shot put coach with an S&C background. Full training blocks — lifting, throwing, and recovery — designed so athletes peak when it counts.",
     organization: "Gupta Performance Systems",
     events: ["shot_put"],
     years_coaching: 8,
@@ -268,8 +257,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/77.jpg",
     location: "Miami, FL",
     remote: true,
-    headline:
-      "Former professional discus thrower, 10 seasons at the international level. Now coaching full-time with a focus on rotational mechanics and developing athletes with professional aspirations.",
+    headline: "Former professional discus thrower with 10 international seasons. Now coaching full-time, focused on rotational mechanics and athletes with pro aspirations.",
     organization: "Santos Throws",
     events: ["discus", "hammer"],
     years_coaching: 10,
@@ -289,8 +277,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/63.jpg",
     location: "Columbus, OH",
     remote: false,
-    headline:
-      "In-person throws coach in central Ohio. I work with high school athletes year-round — off-season technical development, in-season competition prep, and recruiting guidance for college-bound throwers.",
+    headline: "In-person coach in central Ohio for high school athletes. Off-season development, in-season prep, and college recruiting guidance all included.",
     organization: "Ostrowski Throws",
     events: ["shot_put", "discus"],
     years_coaching: 7,
@@ -310,8 +297,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/66.jpg",
     location: "Raleigh, NC",
     remote: true,
-    headline:
-      "Collegiate throws coach with a specialty in female athlete development. I focus on technical precision, mental toughness, and building throwing careers that last past high school.",
+    headline: "Collegiate coach specializing in female athlete development. Technical precision, mental toughness, and building careers that last past high school.",
     organization: "Richardson Athlete Development",
     events: ["shot_put", "discus", "hammer"],
     years_coaching: 10,
@@ -331,8 +317,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/15.jpg",
     location: "Kansas City, MO",
     remote: true,
-    headline:
-      "Affordable video-only coaching for throwers who want regular feedback without a full coaching commitment. Submit throws weekly and get detailed annotated breakdowns back within 24 hours.",
+    headline: "Affordable video-only feedback for throwers who want improvement without a full commitment. Submit weekly, get detailed annotated breakdowns back in 24 hours.",
     organization: null,
     events: ["shot_put", "discus", "hammer", "javelin"],
     years_coaching: 6,
@@ -352,8 +337,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/women/88.jpg",
     location: "San Francisco, CA",
     remote: true,
-    headline:
-      "Biomechanics-driven throws coaching with a background in sports science. I use motion capture data and force plate analysis to give athletes a precise picture of what's limiting their distance.",
+    headline: "Sports science-backed throws coaching. Motion capture and force plate analysis give athletes a precise picture of exactly what's limiting their distance.",
     organization: "Chen Biomechanics",
     events: ["shot_put", "discus"],
     years_coaching: 9,
@@ -373,8 +357,7 @@ export const MOCK_COACHES: CoachCardData[] = [
     avatar_url: "https://randomuser.me/api/portraits/men/27.jpg",
     location: "Dallas, TX",
     remote: false,
-    headline:
-      "In-person shot put and hammer coach in the Dallas-Fort Worth area. I run a small private throwing facility with access to proper implements, a weight room, and film review sessions twice a week.",
+    headline: "In-person shot put and hammer in the DFW area. Private facility with a full weight room, proper implements, and film review twice a week.",
     organization: "Holman Throws Facility",
     events: ["shot_put", "hammer"],
     years_coaching: 13,
