@@ -50,7 +50,7 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
   const availability = AVAILABILITY_CONFIG[coach.availability];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full group transition-all duration-200 ease-out hover:-translate-y-1.5 hover:shadow-md">
       {/* Featured banner — sits above the card, outside the link */}
       {coach.is_featured && (
         <div className="flex items-center justify-between px-4 py-2 bg-[#007B6F]">
@@ -73,7 +73,7 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
       )}
 
       {/* Card body */}
-      <Link href={`/coaches/${coach.id}`} className="block group flex-1">
+      <Link href={`/coaches/${coach.id}`} className="block flex-1">
         <div
           className={`border-2 p-5 bg-[#D7D7D7] transition-colors h-full flex flex-col ${
             coach.is_featured
