@@ -62,7 +62,7 @@ export default function MarketplacePage() {
               </h2>
               <p className="text-base text-black/70 max-w-md mb-8">
                 Set up your profile, set your prices, and get paid. Training plans, video
-                review, and messaging — all in one place. Free to list.
+                review, and messaging — all in one place.
               </p>
               <div className="flex items-center gap-3">
                 <Link
