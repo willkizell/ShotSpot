@@ -55,14 +55,16 @@ export default function MarketplacePage() {
                 Are you a coach?
               </p>
               <h2
-                className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl tracking-tight leading-none mb-5"
+                className="text-4xl sm:text-5xl lg:text-[2.75rem] xl:text-6xl tracking-tight leading-none mb-5 whitespace-nowrap"
                 style={{ fontFamily: "var(--font-anton)" }}
               >
                 BUILD YOUR REMOTE <span className="text-[#007B6F]">ROSTER</span>
               </h2>
               <p className="text-base text-black/70 max-w-md mb-8">
-                Set up your profile, publish your offers, and get paid. Training plans,
-                video review, and messaging — all in one place.
+                Build your remote coaching business on a platform made for throws. Create
+                your profile, set your own prices, publish training plans, review athlete
+                video, and message your roster — all in one place. Free to list, no
+                commission until you get paid.
               </p>
               <div className="flex items-center gap-3">
                 <Link
