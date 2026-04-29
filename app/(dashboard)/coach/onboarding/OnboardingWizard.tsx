@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { submitCoachProfile, type OnboardingData } from "@/lib/coach/actions";
-import type { CoachingHistoryEntry } from "@/lib/types/coach";
+import type { CoachingHistoryEntry, CoachPackage } from "@/lib/types/coach";
 
 const EVENTS = [
   { key: "shot_put", label: "Shot Put" },
@@ -146,9 +146,75 @@ function Step3({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
   );
 }
 
-function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
+const CADENCE_LABELS: Record<string, string> = { monthly: "/ mo", weekly: "/ wk", one_time: "one-time" };
+
+const INCLUDE_OPTIONS = [
+  "Video analysis & feedback",
+  "Training plan",
+  "Lifting / strength plan",
+  "Weekly check-in call",
+  "Unlimited messaging",
+  "Competition prep",
+  "Technique drills",
+  "Nutrition guidance",
+];
+
+function newPackage(): CoachPackage {
+  return { id: Math.random().toString(36).slice(2), name: "", description: "", price: 0, billing_cadence: "monthly", includes: [] };
+}
+
+function PackageForm({ pkg, index, onChange, onRemove }: { pkg: CoachPackage; index: number; onChange: (p: Partial<CoachPackage>) => void; onRemove: () => void }) {
+  const toggle = (opt: string) => onChange({ includes: pkg.includes.includes(opt) ? pkg.includes.filter((i) => i !== opt) : [...pkg.includes, opt] });
   return (
-    <div className="space-y-5">
+    <div className="border-2 border-black p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-black/40">Package {index + 1}</span>
+        <button type="button" onClick={onRemove} className="text-xs text-black/40 hover:text-black underline">Remove</button>
+      </div>
+      <div>
+        <FieldLabel required>Package name</FieldLabel>
+        <Input value={pkg.name} onChange={(e) => onChange({ name: e.target.value })} placeholder='e.g. "Technical Analysis Only"' />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <FieldLabel required>Price (USD)</FieldLabel>
+          <Input type="number" min={0} value={pkg.price || ""} onChange={(e) => onChange({ price: Number(e.target.value) })} placeholder="e.g. 150" />
+        </div>
+        <div>
+          <FieldLabel required>Billing</FieldLabel>
+          <Select value={pkg.billing_cadence} onChange={(e) => onChange({ billing_cadence: e.target.value as CoachPackage["billing_cadence"] })}>
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="one_time">One-time</option>
+          </Select>
+        </div>
+      </div>
+      <div>
+        <FieldLabel>What&apos;s included</FieldLabel>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {INCLUDE_OPTIONS.map((opt) => (
+            <button key={opt} type="button" onClick={() => toggle(opt)}
+              className={`px-3 py-1.5 text-xs border-2 transition-colors ${pkg.includes.includes(opt) ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <FieldLabel>Short description (optional)</FieldLabel>
+        <Input value={pkg.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="e.g. Video breakdown of each throw with written cues" />
+      </div>
+    </div>
+  );
+}
+
+function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
+  const addPkg = () => onChange({ packages: [...data.packages, newPackage()] });
+  const updatePkg = (i: number, patch: Partial<CoachPackage>) => onChange({ packages: data.packages.map((p, idx) => idx === i ? { ...p, ...patch } : p) });
+  const removePkg = (i: number) => onChange({ packages: data.packages.filter((_, idx) => idx !== i) });
+
+  return (
+    <div className="space-y-6">
       <div>
         <FieldLabel required>Enrollment type</FieldLabel>
         <div className="flex gap-3 mt-1">
@@ -161,19 +227,28 @@ function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-5">
-        <div><FieldLabel required>Starting price (USD)</FieldLabel><Input type="number" min={0} value={data.starting_price || ""} onChange={(e) => onChange({ starting_price: Number(e.target.value) })} placeholder="e.g. 250" /></div>
-        <div>
-          <FieldLabel required>Billing cadence</FieldLabel>
-          <Select value={data.billing_cadence} onChange={(e) => onChange({ billing_cadence: e.target.value as OnboardingData["billing_cadence"] })}>
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="one_time">One-time</option>
-          </Select>
+
+      <div>
+        <div className="flex items-baseline justify-between mb-1">
+          <FieldLabel required>Coaching packages</FieldLabel>
+          <span className="text-xs text-black/40">{data.packages.length} package{data.packages.length !== 1 ? "s" : ""}</span>
         </div>
+        <p className="text-xs text-black/50 mb-4">Create one or more tiers athletes can choose from — e.g. video-only, full training, elite. At least one required.</p>
+        <div className="space-y-4">
+          {data.packages.map((pkg, i) => (
+            <PackageForm key={pkg.id} pkg={pkg} index={i} onChange={(p) => updatePkg(i, p)} onRemove={() => removePkg(i)} />
+          ))}
+        </div>
+        <button type="button" onClick={addPkg} className="border-2 border-dashed border-black/30 w-full py-3 text-sm text-black/50 hover:border-black hover:text-black transition-colors mt-4">
+          + Add package
+        </button>
       </div>
+
       <div className="grid grid-cols-2 gap-5">
-        <div><FieldLabel required>Max athletes on roster</FieldLabel><Input type="number" min={1} max={200} value={data.athlete_capacity || ""} onChange={(e) => onChange({ athlete_capacity: Number(e.target.value) })} placeholder="e.g. 15" /></div>
+        <div>
+          <FieldLabel required>Max athletes on roster</FieldLabel>
+          <Input type="number" min={1} max={200} value={data.athlete_capacity || ""} onChange={(e) => onChange({ athlete_capacity: Number(e.target.value) })} placeholder="e.g. 15" />
+        </div>
         <div>
           <FieldLabel required>Typical response time</FieldLabel>
           <Select value={data.response_time} onChange={(e) => onChange({ response_time: e.target.value })}>
@@ -184,6 +259,7 @@ function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
           </Select>
         </div>
       </div>
+
       <p className="text-xs text-black/40 border-t border-black/10 pt-4">ShotSpot charges a 15% platform fee on completed payments. Your listed price is what athletes see.</p>
     </div>
   );
@@ -206,11 +282,26 @@ function Step5({ data }: { data: OnboardingData }) {
         <Row label="Events" value={data.events.map((e) => e.replace("_", " ")).join(", ")} />
         <Row label="Years coaching" value={`${data.years_coaching}`} />
         <Row label="Enrollment" value={data.intake_mode === "instant_join" ? "Instant Join" : "Application Required"} />
-        <Row label="Starting price" value={`$${data.starting_price} / ${data.billing_cadence}`} />
         <Row label="Roster capacity" value={`${data.athlete_capacity} athletes`} />
         <Row label="Response time" value={data.response_time} />
         <Row label="History entries" value={`${data.coaching_history.length}`} />
       </div>
+      {data.packages.length > 0 && (
+        <div className="border-2 border-black p-5">
+          <p className="text-xs uppercase tracking-widest text-black/40 mb-3" style={{ fontFamily: "var(--font-anton)" }}>Packages ({data.packages.length})</p>
+          <div className="space-y-3">
+            {data.packages.map((pkg) => (
+              <div key={pkg.id} className="flex items-start justify-between gap-4 py-2 border-b border-black/10 last:border-0">
+                <div>
+                  <p className="text-sm font-semibold">{pkg.name || "Unnamed package"}</p>
+                  {pkg.includes.length > 0 && <p className="text-xs text-black/50 mt-0.5">{pkg.includes.slice(0, 3).join(" · ")}{pkg.includes.length > 3 ? ` +${pkg.includes.length - 3} more` : ""}</p>}
+                </div>
+                <p className="text-sm font-bold flex-shrink-0">${pkg.price} <span className="font-normal text-black/50">{CADENCE_LABELS[pkg.billing_cadence]}</span></p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="border-2 border-black p-5">
         <p className="text-xs uppercase tracking-widest text-black/40 mb-2" style={{ fontFamily: "var(--font-anton)" }}>Bio</p>
         <p className="text-sm text-black/80 leading-relaxed">{data.short_bio || "—"}</p>
@@ -234,7 +325,9 @@ function validate(step: number, data: OnboardingData): string | null {
     if (!data.short_bio.trim()) return "A coaching bio is required.";
   }
   if (step === 4) {
-    if (!data.starting_price || data.starting_price <= 0) return "Enter a starting price.";
+    if (data.packages.length === 0) return "Add at least one coaching package.";
+    if (data.packages.some((p) => !p.name.trim())) return "All packages need a name.";
+    if (data.packages.some((p) => p.price <= 0)) return "All packages need a price greater than $0.";
     if (!data.athlete_capacity || data.athlete_capacity < 1) return "Enter your roster capacity.";
     if (!data.response_time) return "Select a response time.";
   }
@@ -253,9 +346,8 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
     short_bio: "",
     coaching_history: [],
     intake_mode: "application_required",
+    packages: [],
     athlete_capacity: 15,
-    starting_price: 0,
-    billing_cadence: "monthly",
     response_time: "",
   });
   const [error, setError] = useState("");

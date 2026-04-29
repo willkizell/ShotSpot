@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { CoachingHistoryEntry } from "@/lib/types/coach";
+import type { CoachingHistoryEntry, CoachPackage } from "@/lib/types/coach";
 
 export interface OnboardingData {
   // Step 1
@@ -18,9 +18,8 @@ export interface OnboardingData {
   coaching_history: CoachingHistoryEntry[];
   // Step 4
   intake_mode: "instant_join" | "application_required";
+  packages: CoachPackage[];
   athlete_capacity: number;
-  starting_price: number;
-  billing_cadence: "monthly" | "weekly" | "one_time";
   response_time: string;
 }
 
@@ -28,6 +27,18 @@ export async function submitCoachProfile(data: OnboardingData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
+
+  // Ensure a users row exists (email signups don't go through the OAuth callback)
+  await supabase.from("users").upsert({
+    id: user.id,
+    email: user.email!,
+    full_name: data.full_name,
+    role: "coach",
+  });
+
+  const startingPrice = data.packages.length > 0
+    ? Math.min(...data.packages.map((p) => p.price))
+    : null;
 
   const { error } = await supabase.from("coach_profiles").upsert({
     id: user.id,
@@ -41,9 +52,9 @@ export async function submitCoachProfile(data: OnboardingData) {
     full_bio: data.short_bio,
     coaching_history: data.coaching_history,
     intake_mode: data.intake_mode,
+    packages: data.packages,
     athlete_capacity: data.athlete_capacity,
-    starting_price: data.starting_price,
-    billing_cadence: data.billing_cadence,
+    starting_price: startingPrice,
     response_time: data.response_time,
     status: "pending",
   });
