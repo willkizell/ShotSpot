@@ -1,7 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sendCoachSubmissionAlert } from "@/lib/email";
 import type { CoachingHistoryEntry, CoachPackage } from "@/lib/types/coach";
 
 export interface OnboardingData {
@@ -60,5 +60,14 @@ export async function submitCoachProfile(data: OnboardingData) {
   });
 
   if (error) return { error: error.message };
-  redirect("/coach/dashboard?onboarding=complete");
+
+  // Notify admin — fire-and-forget, don't block the response
+  sendCoachSubmissionAlert({
+    coachName: data.full_name,
+    coachEmail: user.email!,
+    events: data.events,
+    location: data.location,
+  }).catch(() => {});
+
+  return { success: true };
 }

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sendCoachApprovedEmail, sendCoachRejectedEmail } from "@/lib/email";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -25,6 +26,20 @@ export async function approveCoach(coachId: string) {
     })
     .eq("id", coachId);
   if (error) return { error: error.message };
+
+  // Email the coach
+  const { data: coachData } = await supabase
+    .from("coach_profiles")
+    .select("full_name, users(email)")
+    .eq("id", coachId)
+    .single();
+  if (coachData) {
+    const email = (coachData.users as { email: string } | null)?.email;
+    if (email) {
+      sendCoachApprovedEmail({ coachName: coachData.full_name, coachEmail: email, coachId }).catch(() => {});
+    }
+  }
+
   return { success: true };
 }
 
@@ -41,6 +56,20 @@ export async function rejectCoach(coachId: string, reason: string) {
     })
     .eq("id", coachId);
   if (error) return { error: error.message };
+
+  // Email the coach
+  const { data: coachData } = await supabase
+    .from("coach_profiles")
+    .select("full_name, users(email)")
+    .eq("id", coachId)
+    .single();
+  if (coachData) {
+    const email = (coachData.users as { email: string } | null)?.email;
+    if (email) {
+      sendCoachRejectedEmail({ coachName: coachData.full_name, coachEmail: email, reason }).catch(() => {});
+    }
+  }
+
   return { success: true };
 }
 

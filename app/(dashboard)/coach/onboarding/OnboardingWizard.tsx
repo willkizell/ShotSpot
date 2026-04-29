@@ -352,6 +352,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const update = (patch: Partial<OnboardingData>) => setData((d) => ({ ...d, ...patch }));
   const next = () => { const err = validate(step, data); if (err) { setError(err); return; } setError(""); setStep((s) => s + 1); };
@@ -361,8 +362,34 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
     if (err) { setError(err); return; }
     setSubmitting(true);
     const result = await submitCoachProfile(data);
-    if (result?.error) { setError(result.error); setSubmitting(false); }
+    if (result?.error) { setError(result.error); setSubmitting(false); return; }
+    if (result?.success) setSubmitted(true);
   };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-[#D7D7D7] flex items-center justify-center px-4">
+        <div className="max-w-lg w-full text-center">
+          <div className="w-16 h-16 bg-[#007B6F] flex items-center justify-center mx-auto mb-6">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <h1 className="text-3xl sm:text-4xl tracking-tight leading-none mb-4" style={{ fontFamily: "var(--font-anton)" }}>
+            APPLICATION RECEIVED
+          </h1>
+          <p className="text-base text-black/70 mb-2">
+            Thanks, {data.full_name.split(" ")[0]}. We&apos;ll review your profile within 1–2 business days.
+          </p>
+          <p className="text-sm text-black/50 mb-8">
+            Check your inbox for a confirmation email. You&apos;ll be notified as soon as you&apos;re approved and your profile goes live on the marketplace.
+          </p>
+          <a href="/coach/dashboard" className="inline-block bg-black text-[#D7D7D7] px-8 py-3 text-sm font-semibold hover:bg-[#007B6F] transition-colors">
+            Go to your dashboard →
+          </a>
+          <p className="text-xs text-black/30 mt-6">Questions? Email us at hello@shotspot.app</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#D7D7D7]">
