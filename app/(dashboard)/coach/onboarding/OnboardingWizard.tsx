@@ -283,12 +283,14 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
         </div>
       </div>
       <div className="border-b border-black/10 bg-[#D7D7D7]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-5 overflow-x-auto">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center">
           {STEP_LABELS.map((label, i) => (
-            <div key={i} className="flex items-center gap-2 flex-shrink-0">
-              <StepLabel step={i + 1} label={label} current={step} />
-              {i < STEP_LABELS.length - 1 && <div className="w-6 sm:w-10 h-px bg-black/15 flex-shrink-0" />}
-            </div>
+            <>
+              <div key={i} className="flex items-center gap-1.5 shrink-0">
+                <StepLabel step={i + 1} label={label} current={step} />
+              </div>
+              {i < STEP_LABELS.length - 1 && <div key={`line-${i}`} className="flex-1 h-px bg-black/15 mx-2" />}
+            </>
           ))}
         </div>
       </div>
