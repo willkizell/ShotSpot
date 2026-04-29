@@ -22,8 +22,16 @@ export async function GET(request: NextRequest) {
         role,
       });
 
-      const redirectPath = role === "coach" ? "/coach/dashboard" : "/athlete/dashboard";
-      return NextResponse.redirect(`${origin}${redirectPath}`);
+      if (role === "coach") {
+        const { data: profile } = await supabase
+          .from("coach_profiles")
+          .select("id")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        const redirectPath = profile ? "/coach/dashboard" : "/coach/onboarding";
+        return NextResponse.redirect(`${origin}${redirectPath}`);
+      }
+      return NextResponse.redirect(`${origin}/athlete/dashboard`);
     }
   }
 

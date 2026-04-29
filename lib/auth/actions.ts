@@ -14,7 +14,14 @@ export async function signInWithEmail(email: string, password: string) {
     .select("role")
     .single();
 
-  redirect(userData?.role === "coach" ? "/coach/dashboard" : "/athlete/dashboard");
+  if (userData?.role === "coach") {
+    const { data: profile } = await supabase
+      .from("coach_profiles")
+      .select("id")
+      .maybeSingle();
+    redirect(profile ? "/coach/dashboard" : "/coach/onboarding");
+  }
+  redirect("/athlete/dashboard");
 }
 
 export async function signUpAsAthlete(email: string, password: string, fullName: string) {
