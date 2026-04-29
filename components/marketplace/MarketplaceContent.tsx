@@ -459,7 +459,7 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map((coach) =>
                 coach.is_featured ? (
-                  <div key={coach.id} className="sm:col-span-2">
+                  <div key={coach.id} className="sm:col-span-2 xl:col-span-3">
                     <FeaturedGridCard coach={coach} />
                   </div>
                 ) : (

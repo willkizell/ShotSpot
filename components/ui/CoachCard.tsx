@@ -79,11 +79,11 @@ export function FeaturedGridCard({ coach }: { coach: CoachCardData }) {
           <img
             src={coach.avatar_url}
             alt={coach.full_name}
-            className="w-44 flex-shrink-0 object-cover hidden sm:block"
+            className="w-52 flex-shrink-0 object-cover hidden sm:block"
           />
         ) : (
           <div
-            className="w-44 flex-shrink-0 bg-black text-[#D7D7D7] items-center justify-center text-5xl hidden sm:flex"
+            className="w-52 flex-shrink-0 bg-black text-[#D7D7D7] items-center justify-center text-5xl hidden sm:flex"
             style={{ fontFamily: "var(--font-anton)" }}
           >
             {coach.full_name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
