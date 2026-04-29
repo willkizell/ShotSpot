@@ -1,9 +1,10 @@
 import { Header } from "@/components/layout/Header";
 import { MarketplaceContent } from "@/components/marketplace/MarketplaceContent";
-import { MOCK_COACHES } from "@/lib/mock/coaches";
+import { getMarketplaceCoaches } from "@/lib/coaches/query";
 import Link from "next/link";
 
-export default function MarketplacePage() {
+export default async function MarketplacePage() {
+  const coaches = await getMarketplaceCoaches();
   return (
     <div className="min-h-screen bg-[#D7D7D7]">
       <Header />
@@ -85,7 +86,7 @@ export default function MarketplacePage() {
 
       {/* Marketplace */}
       <div id="coaches">
-        <MarketplaceContent coaches={MOCK_COACHES} />
+        <MarketplaceContent coaches={coaches} />
       </div>
 
       {/* Footer */}

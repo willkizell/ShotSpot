@@ -40,7 +40,7 @@ export async function signUpAsCoach(email: string, password: string, fullName: s
     },
   });
   if (error) return { error: error.message };
-  redirect("/coach/dashboard");
+  redirect("/coach/onboarding");
 }
 
 export async function signInWithGoogle(role: UserRole): Promise<void> {
