@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { sendCoachSubmissionAlert } from "@/lib/email";
-import type { CoachingHistoryEntry, CoachPackage } from "@/lib/types/coach";
+import type { CoachingHistoryEntry, CoachPackage, CoachLink } from "@/lib/types/coach";
 
 export interface OnboardingData {
   // Step 1
@@ -16,6 +16,8 @@ export interface OnboardingData {
   short_bio: string;
   // Step 3
   coaching_history: CoachingHistoryEntry[];
+  // Step 2 (links)
+  links: CoachLink[];
   // Step 4
   intake_mode: "instant_join" | "application_required";
   packages: CoachPackage[];
@@ -51,6 +53,7 @@ export async function submitCoachProfile(data: OnboardingData) {
     short_bio: data.short_bio,
     full_bio: data.short_bio,
     coaching_history: data.coaching_history,
+    links: data.links.filter((l) => l.url.trim()),
     intake_mode: data.intake_mode,
     packages: data.packages,
     athlete_capacity: data.athlete_capacity,

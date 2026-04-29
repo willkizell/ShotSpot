@@ -17,6 +17,11 @@ export interface CoachPackage {
   includes: string[];
 }
 
+export interface CoachLink {
+  label: string;
+  url: string;
+}
+
 export interface CoachProfileData extends CoachCardData {
   banner_url?: string | null;
   full_bio: string;

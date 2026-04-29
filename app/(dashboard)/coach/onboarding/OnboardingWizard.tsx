@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { submitCoachProfile, type OnboardingData } from "@/lib/coach/actions";
-import type { CoachingHistoryEntry, CoachPackage } from "@/lib/types/coach";
+import type { CoachingHistoryEntry, CoachPackage, CoachLink } from "@/lib/types/coach";
 
 const EVENTS = [
   { key: "shot_put", label: "Shot Put" },
@@ -77,6 +77,53 @@ function Step1({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
   );
 }
 
+const PREDEFINED_LINKS = [
+  { label: "Instagram", placeholder: "https://instagram.com/yourhandle" },
+  { label: "LinkedIn", placeholder: "https://linkedin.com/in/yourname" },
+  { label: "Coaching profile", placeholder: "USATF page, athletic.net, personal site, etc." },
+];
+const PREDEFINED_LABELS = PREDEFINED_LINKS.map((p) => p.label);
+
+function LinksSection({ links, onChange }: { links: CoachLink[]; onChange: (links: CoachLink[]) => void }) {
+  const getUrl = (label: string) => links.find((l) => l.label === label)?.url ?? "";
+  const setUrl = (label: string, url: string) => {
+    const exists = links.some((l) => l.label === label);
+    onChange(exists ? links.map((l) => (l.label === label ? { ...l, url } : l)) : [...links, { label, url }]);
+  };
+  const customLinks = links.filter((l) => !PREDEFINED_LABELS.includes(l.label));
+  const addCustom = () => onChange([...links, { label: "", url: "" }]);
+  const updateCustom = (i: number, patch: Partial<CoachLink>) => {
+    const updated = customLinks.map((l, idx) => (idx === i ? { ...l, ...patch } : l));
+    onChange([...links.filter((l) => PREDEFINED_LABELS.includes(l.label)), ...updated]);
+  };
+  const removeCustom = (i: number) => {
+    onChange([...links.filter((l) => PREDEFINED_LABELS.includes(l.label)), ...customLinks.filter((_, idx) => idx !== i)]);
+  };
+
+  return (
+    <div className="border-t border-black/10 pt-5">
+      <p className="text-sm font-medium mb-1">Links & online presence</p>
+      <p className="text-xs text-black/50 mb-4">All optional. These appear on your profile and help verify your background.</p>
+      <div className="space-y-3">
+        {PREDEFINED_LINKS.map(({ label, placeholder }) => (
+          <div key={label} className="flex items-center gap-3">
+            <span className="text-sm w-32 flex-shrink-0 text-black/70">{label}</span>
+            <Input type="url" value={getUrl(label)} onChange={(e) => setUrl(label, e.target.value)} placeholder={placeholder} />
+          </div>
+        ))}
+        {customLinks.map((link, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Input value={link.label} onChange={(e) => updateCustom(i, { label: e.target.value })} placeholder="Link name" className="w-32 flex-shrink-0" />
+            <Input type="url" value={link.url} onChange={(e) => updateCustom(i, { url: e.target.value })} placeholder="https://..." />
+            <button type="button" onClick={() => removeCustom(i)} className="text-black/30 hover:text-black flex-shrink-0 text-lg leading-none">✕</button>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={addCustom} className="mt-3 text-sm text-[#007B6F] hover:underline">+ Add another link</button>
+    </div>
+  );
+}
+
 function Step2({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
   return (
     <div className="space-y-5">
@@ -101,6 +148,7 @@ function Step2({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
         <Textarea rows={5} maxLength={600} value={data.short_bio} onChange={(e) => onChange({ short_bio: e.target.value })} placeholder="Tell athletes who you are, what you coach, and what makes your approach different." />
         <p className="text-xs text-black/40 mt-1">{data.short_bio.length}/600 characters</p>
       </div>
+      <LinksSection links={data.links} onChange={(links) => onChange({ links })} />
     </div>
   );
 }
@@ -306,6 +354,19 @@ function Step5({ data }: { data: OnboardingData }) {
         <p className="text-xs uppercase tracking-widest text-black/40 mb-2" style={{ fontFamily: "var(--font-anton)" }}>Bio</p>
         <p className="text-sm text-black/80 leading-relaxed">{data.short_bio || "—"}</p>
       </div>
+      {data.links.filter((l) => l.url.trim()).length > 0 && (
+        <div className="border-2 border-black p-5">
+          <p className="text-xs uppercase tracking-widest text-black/40 mb-3" style={{ fontFamily: "var(--font-anton)" }}>Links</p>
+          <div className="space-y-2">
+            {data.links.filter((l) => l.url.trim()).map((link, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="text-xs text-black/50 w-32 flex-shrink-0">{link.label}</span>
+                <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#007B6F] hover:underline truncate">{link.url}</a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -345,6 +406,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
     years_coaching: 0,
     short_bio: "",
     coaching_history: [],
+    links: [],
     intake_mode: "application_required",
     packages: [],
     athlete_capacity: 15,
