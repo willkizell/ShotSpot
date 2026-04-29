@@ -5,7 +5,7 @@ import type { CoachCardData } from "@/components/ui/CoachCard";
 export const MOCK_FEATURED_COACH: CoachCardData = {
   id: "coach-featured",
   full_name: "James Okafor",
-  avatar_url: null,
+  avatar_url: "https://randomuser.me/api/portraits/men/32.jpg",
   location: "Atlanta, GA",
   remote: true,
   headline:
@@ -28,7 +28,7 @@ export const MOCK_COACHES: CoachCardData[] = [
   {
     id: "coach-1",
     full_name: "Marcus Webb",
-    avatar_url: null,
+    avatar_url: "https://randomuser.me/api/portraits/men/45.jpg",
     location: "Eugene, OR",
     remote: true,
     headline: "15 years coaching shot put and discus at the collegiate and elite level. Athletes have thrown 20m+ in shot and 65m+ in discus under my programming.",
@@ -48,7 +48,7 @@ export const MOCK_COACHES: CoachCardData[] = [
   {
     id: "coach-2",
     full_name: "Dana Kowalski",
-    avatar_url: null,
+    avatar_url: "https://randomuser.me/api/portraits/women/68.jpg",
     location: "Colorado Springs, CO",
     remote: true,
     headline: "Hammer and weight specialist. USATF certified. I work with high school and collegiate athletes who want structured programming and consistent video review.",
@@ -68,7 +68,7 @@ export const MOCK_COACHES: CoachCardData[] = [
   {
     id: "coach-3",
     full_name: "Priya Menon",
-    avatar_url: null,
+    avatar_url: "https://randomuser.me/api/portraits/women/44.jpg",
     location: "Austin, TX",
     remote: true,
     headline: "Javelin coach and former NCAA All-American. I specialize in technical development for high school athletes and the transition to college-level throwing.",
@@ -88,7 +88,7 @@ export const MOCK_COACHES: CoachCardData[] = [
   {
     id: "coach-5",
     full_name: "Taylor Reinholt",
-    avatar_url: null,
+    avatar_url: "https://randomuser.me/api/portraits/men/22.jpg",
     location: "Minneapolis, MN",
     remote: true,
     headline: "Youth and high school throws coach. I help beginner to intermediate throwers build solid technique and consistent training habits across all four events.",
@@ -108,7 +108,7 @@ export const MOCK_COACHES: CoachCardData[] = [
   {
     id: "coach-6",
     full_name: "Sandra Eriksson",
-    avatar_url: null,
+    avatar_url: "https://randomuser.me/api/portraits/women/12.jpg",
     location: "Portland, OR",
     remote: true,
     headline: "Video critique specialist. Send me your throws and I'll send back annotated feedback within 48 hours. No subscription — pay per review or buy a monthly package.",

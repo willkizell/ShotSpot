@@ -19,7 +19,7 @@ function PhotoBlock({ name, src }: { name: string; src?: string | null }) {
 
   if (src) {
     return (
-      <div className="w-44 flex-shrink-0 self-stretch hidden sm:block">
+      <div className="w-56 flex-shrink-0 self-stretch hidden sm:block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={name} className="w-full h-full object-cover" />
       </div>
@@ -28,7 +28,7 @@ function PhotoBlock({ name, src }: { name: string; src?: string | null }) {
 
   return (
     <div
-      className="w-44 flex-shrink-0 self-stretch bg-black text-[#D7D7D7] items-center justify-center text-5xl hidden sm:flex"
+      className="w-56 flex-shrink-0 self-stretch bg-black text-[#D7D7D7] items-center justify-center text-5xl hidden sm:flex"
       style={{ fontFamily: "var(--font-anton)" }}
     >
       {initials}
