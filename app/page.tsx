@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { MarketplaceContent } from "@/components/marketplace/MarketplaceContent";
-import { MOCK_COACHES, MOCK_FEATURED_COACH } from "@/lib/mock/coaches";
+import { MOCK_COACHES } from "@/lib/mock/coaches";
 import Link from "next/link";
 
 export default function MarketplacePage() {
@@ -79,7 +79,7 @@ export default function MarketplacePage() {
 
       {/* Marketplace */}
       <div id="coaches">
-        <MarketplaceContent coaches={MOCK_COACHES} featuredCoach={MOCK_FEATURED_COACH} />
+        <MarketplaceContent coaches={MOCK_COACHES} />
       </div>
 
       {/* Footer */}

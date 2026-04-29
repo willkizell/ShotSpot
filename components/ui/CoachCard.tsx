@@ -21,6 +21,7 @@ export interface CoachCardData {
   response_time: string;
   proof_tags: string[];
   has_elite_athletes: boolean;
+  is_featured?: boolean;
 }
 
 const EVENT_LABELS: Record<string, string> = {
@@ -48,7 +49,20 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
 
   return (
     <Link href={`/coaches/${coach.id}`} className="block group">
-      <div className="border-2 border-black p-5 bg-[#D7D7D7] transition-colors group-hover:border-[#007B6F] h-full flex flex-col">
+      <div className={`border-2 p-5 bg-[#D7D7D7] transition-colors h-full flex flex-col ${coach.is_featured ? "border-[#007B6F] group-hover:border-[#005a51]" : "border-black group-hover:border-[#007B6F]"}`}>
+        {/* Featured badge */}
+        {coach.is_featured && (
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#007B6F] animate-pulse" />
+            <span
+              className="text-[10px] uppercase tracking-widest text-[#007B6F]"
+              style={{ fontFamily: "var(--font-anton)" }}
+            >
+              Featured Coach
+            </span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-start gap-4 mb-4">
           <Avatar src={coach.avatar_url} name={coach.full_name} size="lg" />

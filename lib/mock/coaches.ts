@@ -1,30 +1,28 @@
 import type { CoachCardData } from "@/components/ui/CoachCard";
 
-// Featured coaches occupy the premium placement slot above the grid.
-// In production this is driven by the featured_placements table (see docs/migrations/002_featured_placements.sql).
-export const MOCK_FEATURED_COACH: CoachCardData = {
-  id: "coach-featured",
-  full_name: "James Okafor",
-  avatar_url: "https://randomuser.me/api/portraits/men/32.jpg",
-  location: "Atlanta, GA",
-  remote: true,
-  headline:
-    "20 years coaching throws at the D1 and professional level. Athletes have competed at the Olympic Games and World Championships. I take 2-3 new remote athletes per year — apply if you're serious.",
-  organization: "Okafor Track & Field",
-  events: ["shot_put", "discus", "hammer"],
-  years_coaching: 20,
-  intake_mode: "application_required",
-  starting_price: 500,
-  billing_cadence: "monthly",
-  availability: "limited",
-  athlete_count: 14,
-  athlete_capacity: 16,
-  response_time: "72hr",
-  proof_tags: ["Olympic Games", "World Championships", "D1 head coach"],
-  has_elite_athletes: true,
-};
-
 export const MOCK_COACHES: CoachCardData[] = [
+  {
+    id: "coach-featured",
+    full_name: "James Okafor",
+    avatar_url: "https://randomuser.me/api/portraits/men/32.jpg",
+    location: "Atlanta, GA",
+    remote: true,
+    headline:
+      "20 years coaching throws at the D1 and professional level. Athletes have competed at the Olympic Games and World Championships. I take 2-3 new remote athletes per year — apply if you're serious.",
+    organization: "Okafor Track & Field",
+    events: ["shot_put", "discus", "hammer"],
+    years_coaching: 20,
+    intake_mode: "application_required",
+    starting_price: 500,
+    billing_cadence: "monthly",
+    availability: "limited",
+    athlete_count: 14,
+    athlete_capacity: 16,
+    response_time: "72hr",
+    proof_tags: ["Olympic Games", "World Championships", "D1 head coach"],
+    has_elite_athletes: true,
+    is_featured: true,
+  },
   {
     id: "coach-1",
     full_name: "Marcus Webb",
