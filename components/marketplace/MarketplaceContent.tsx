@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CoachCard } from "@/components/ui/CoachCard";
+import { CoachCard, FeaturedGridCard } from "@/components/ui/CoachCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { CoachCardData } from "@/components/ui/CoachCard";
 
@@ -172,10 +172,8 @@ function EventPill({
     <button
       type="button"
       onClick={onClick}
-      className={`px-3 py-1.5 text-xs font-semibold border-2 transition-colors whitespace-nowrap ${
-        active
-          ? "bg-black text-[#D7D7D7] border-black"
-          : "bg-transparent text-black border-black/30 hover:border-black"
+      className={`h-10 px-4 text-xs font-semibold border-2 border-black transition-colors whitespace-nowrap ${
+        active ? "bg-black text-[#D7D7D7]" : "bg-transparent text-black hover:bg-black/5"
       }`}
     >
       {label}
@@ -387,7 +385,7 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
       <div className="border-b-2 border-black bg-[#D7D7D7] sticky top-14 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-sm">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30 pointer-events-none"
               width="14"
@@ -400,15 +398,15 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
             </svg>
             <input
               type="text"
-              placeholder="Search coaches by name, event, specialty…"
+              placeholder="Search coaches…"
               value={filters.search}
               onChange={(e) => updateFilters({ search: e.target.value })}
-              className="w-full pl-8 pr-3 py-2 text-sm bg-transparent border-2 border-black/20 focus:border-black outline-none transition-colors placeholder:text-black/30"
+              className="w-full h-10 pl-8 pr-3 text-sm bg-transparent border-2 border-black outline-none placeholder:text-black/30"
             />
           </div>
 
           {/* Event quick-pills (desktop) */}
-          <div className="hidden lg:flex items-center gap-1.5 overflow-x-auto">
+          <div className="hidden lg:flex items-center gap-1.5">
             {EVENTS.map((e) => (
               <EventPill
                 key={e.key}
@@ -459,9 +457,15 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
           {/* Grid */}
           {filtered.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((coach) => (
-                <CoachCard key={coach.id} coach={coach} />
-              ))}
+              {filtered.map((coach) =>
+                coach.is_featured ? (
+                  <div key={coach.id} className="sm:col-span-2">
+                    <FeaturedGridCard coach={coach} />
+                  </div>
+                ) : (
+                  <CoachCard key={coach.id} coach={coach} />
+                )
+              )}
             </div>
           ) : (
             <EmptyState
