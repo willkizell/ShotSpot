@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CoachCard, FeaturedGridCard } from "@/components/ui/CoachCard";
+import { CoachCard } from "@/components/ui/CoachCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { CoachCardData } from "@/components/ui/CoachCard";
 
@@ -370,6 +370,7 @@ interface MarketplaceContentProps {
 
 export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [showFilters, setShowFilters] = useState(true);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const updateFilters = (patch: Partial<Filters>) =>
@@ -417,6 +418,18 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
             ))}
           </div>
 
+          {/* Hide/Show Filters (desktop) */}
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            className="hidden lg:flex items-center gap-2 h-10 px-4 border-2 border-black text-xs font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors whitespace-nowrap"
+          >
+            <svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+              <path d="M0 1.5H13M2.5 5.5H10.5M5 9.5H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </button>
+
           {/* Mobile filters button */}
           <button
             type="button"
@@ -436,9 +449,11 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
       {/* ── Body ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-10">
         {/* Sidebar (desktop) */}
-        <div className="hidden lg:block">
-          <FilterSidebar filters={filters} onChange={updateFilters} onReset={resetFilters} />
-        </div>
+        {showFilters && (
+          <div className="hidden lg:block">
+            <FilterSidebar filters={filters} onChange={updateFilters} onReset={resetFilters} />
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 min-w-0 py-8">
@@ -456,16 +471,10 @@ export function MarketplaceContent({ coaches }: MarketplaceContentProps) {
 
           {/* Grid */}
           {filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((coach) =>
-                coach.is_featured ? (
-                  <div key={coach.id} className="sm:col-span-2 xl:col-span-3">
-                    <FeaturedGridCard coach={coach} />
-                  </div>
-                ) : (
-                  <CoachCard key={coach.id} coach={coach} />
-                )
-              )}
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${showFilters ? "xl:grid-cols-3" : "xl:grid-cols-4"}`}>
+              {filtered.map((coach) => (
+                <CoachCard key={coach.id} coach={coach} />
+              ))}
             </div>
           ) : (
             <EmptyState
