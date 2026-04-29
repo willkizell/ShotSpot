@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
 const ADMIN_EMAIL = "wkizell@gmail.com";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -16,7 +16,7 @@ export async function sendCoachSubmissionAlert({
   events: string[];
   location: string;
 }) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!resend) return;
   await resend.emails.send({
     from: FROM,
     to: ADMIN_EMAIL,
@@ -41,7 +41,7 @@ export async function sendCoachApprovedEmail({
   coachEmail: string;
   coachId: string;
 }) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!resend) return;
   await resend.emails.send({
     from: FROM,
     to: coachEmail,
@@ -65,7 +65,7 @@ export async function sendCoachRejectedEmail({
   coachEmail: string;
   reason: string;
 }) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!resend) return;
   await resend.emails.send({
     from: FROM,
     to: coachEmail,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { signUpAsAthlete, signInWithGoogle, signInWithApple } from "@/lib/auth/actions";
+import { signUpAsAthlete, signInWithGoogle } from "@/lib/auth/actions";
 
 export default function AthleteSignupPage() {
   const [fullName, setFullName] = useState("");
@@ -104,14 +104,6 @@ export default function AthleteSignupPage() {
                 className="w-full border-2 border-black py-2.5 text-sm font-medium hover:bg-black hover:text-[#D7D7D7] transition-colors"
               >
                 Sign up with Google
-              </button>
-            </form>
-            <form action={signInWithApple.bind(null, "athlete")}>
-              <button
-                type="submit"
-                className="w-full border-2 border-black bg-black text-[#D7D7D7] py-2.5 text-sm font-medium hover:bg-[#007B6F] transition-colors"
-              >
-                Sign up with Apple
               </button>
             </form>
           </div>
