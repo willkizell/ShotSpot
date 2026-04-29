@@ -15,7 +15,7 @@ export default function MarketplacePage() {
             {/* Left: headline */}
             <div className="py-12 lg:pr-12">
               <h1
-                className="text-5xl sm:text-6xl xl:text-7xl tracking-tight leading-none mb-5 whitespace-nowrap"
+                className="text-4xl sm:text-5xl lg:text-[3.25rem] xl:text-6xl tracking-tight leading-none mb-5"
                 style={{ fontFamily: "var(--font-anton)" }}
               >
                 FIND YOUR THROWS COACH
