@@ -155,22 +155,32 @@ function Step2({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
 
 function HistoryEntryForm({ entry, index, onChange, onRemove }: { entry: CoachingHistoryEntry; index: number; onChange: (p: Partial<CoachingHistoryEntry>) => void; onRemove: () => void }) {
   return (
-    <div className="border-2 border-black/20 p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-black/40">Role {index + 1}</span>
-        <button type="button" onClick={onRemove} className="text-xs text-black/40 hover:text-black underline">Remove</button>
+    <div className="flex gap-5">
+      {/* Timeline left column */}
+      <div className="flex flex-col items-center flex-shrink-0">
+        <div className="w-9 h-9 bg-[#007B6F] flex items-center justify-center text-white text-sm font-bold" style={{ fontFamily: "var(--font-anton)" }}>
+          {index + 1}
+        </div>
+        <div className="w-px flex-1 bg-black/10 mt-2" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><FieldLabel required>Role / Title</FieldLabel><Input value={entry.role} onChange={(e) => onChange({ role: e.target.value })} placeholder="e.g. Head Throws Coach" /></div>
-        <div><FieldLabel required>Organization</FieldLabel><Input value={entry.organization} onChange={(e) => onChange({ organization: e.target.value })} placeholder="e.g. University of Oregon" /></div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><FieldLabel required>Start year</FieldLabel><Input type="number" min={1960} max={new Date().getFullYear()} value={entry.start_year || ""} onChange={(e) => onChange({ start_year: Number(e.target.value) })} placeholder="2015" /></div>
-        <div><FieldLabel>End year</FieldLabel><Input type="number" min={1960} max={new Date().getFullYear()} value={entry.end_year ?? ""} onChange={(e) => onChange({ end_year: e.target.value ? Number(e.target.value) : null })} placeholder="Present" /></div>
-      </div>
-      <div>
-        <FieldLabel>Description</FieldLabel>
-        <Textarea rows={2} maxLength={200} value={entry.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="Brief summary of your role and achievements" />
+      {/* Content */}
+      <div className="flex-1 pb-8 space-y-3">
+        <div className="flex items-start gap-3">
+          <Input
+            value={entry.role}
+            onChange={(e) => onChange({ role: e.target.value })}
+            placeholder="Role / Title — e.g. Head Throws Coach"
+            className="flex-1 font-semibold"
+          />
+          <button type="button" onClick={onRemove} className="mt-2.5 text-black/25 hover:text-black transition-colors text-xl leading-none flex-shrink-0">×</button>
+        </div>
+        <Input value={entry.organization} onChange={(e) => onChange({ organization: e.target.value })} placeholder="Organization — e.g. University of Oregon" />
+        <div className="flex items-center gap-3">
+          <Input type="number" min={1960} max={new Date().getFullYear()} value={entry.start_year || ""} onChange={(e) => onChange({ start_year: Number(e.target.value) })} placeholder="Start year" className="max-w-[130px]" />
+          <span className="text-black/30 font-medium">—</span>
+          <Input type="number" min={1960} max={new Date().getFullYear()} value={entry.end_year ?? ""} onChange={(e) => onChange({ end_year: e.target.value ? Number(e.target.value) : null })} placeholder="End year (blank = present)" />
+        </div>
+        <Textarea rows={2} maxLength={200} value={entry.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="What were your key responsibilities or athlete achievements? (optional)" />
       </div>
     </div>
   );
@@ -181,15 +191,25 @@ function Step3({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
   const updateEntry = (i: number, patch: Partial<CoachingHistoryEntry>) => onChange({ coaching_history: data.coaching_history.map((e, idx) => idx === i ? { ...e, ...patch } : e) });
   const removeEntry = (i: number) => onChange({ coaching_history: data.coaching_history.filter((_, idx) => idx !== i) });
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-black/60">Add your coaching roles in reverse chronological order. Athletes pay attention to this.</p>
-      {data.coaching_history.length === 0 && <p className="text-sm text-black/40 italic">No history added yet.</p>}
-      {data.coaching_history.map((entry, i) => (
-        <HistoryEntryForm key={i} entry={entry} index={i} onChange={(p) => updateEntry(i, p)} onRemove={() => removeEntry(i)} />
-      ))}
-      <button type="button" onClick={addEntry} className="border-2 border-dashed border-black/30 w-full py-3 text-sm text-black/50 hover:border-black hover:text-black transition-colors">
-        + Add coaching role
-      </button>
+    <div>
+      <p className="text-sm text-black/60 mb-6">Add your past coaching roles in reverse chronological order. Athletes take this seriously.</p>
+      {data.coaching_history.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 border-2 border-black/10">
+          <p className="text-sm text-black/40 mb-4">No experience added yet</p>
+          <button type="button" onClick={addEntry} className="bg-black text-[#D7D7D7] px-6 py-2.5 text-sm font-semibold hover:bg-[#007B6F] transition-colors">
+            + Add your first role
+          </button>
+        </div>
+      ) : (
+        <div>
+          {data.coaching_history.map((entry, i) => (
+            <HistoryEntryForm key={i} entry={entry} index={i} onChange={(p) => updateEntry(i, p)} onRemove={() => removeEntry(i)} />
+          ))}
+          <button type="button" onClick={addEntry} className="border-2 border-black px-6 py-2.5 text-sm font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors">
+            + Add another role
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -214,43 +234,71 @@ function newPackage(): CoachPackage {
 function PackageForm({ pkg, index, onChange, onRemove }: { pkg: CoachPackage; index: number; onChange: (p: Partial<CoachPackage>) => void; onRemove: () => void }) {
   const toggle = (opt: string) => onChange({ includes: pkg.includes.includes(opt) ? pkg.includes.filter((i) => i !== opt) : [...pkg.includes, opt] });
   return (
-    <div className="border-2 border-black p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-black/40">Package {index + 1}</span>
-        <button type="button" onClick={onRemove} className="text-xs text-black/40 hover:text-black underline">Remove</button>
+    <div className="border-2 border-black overflow-hidden">
+      {/* Card header */}
+      <div className="flex items-center justify-between px-6 py-3 bg-black">
+        <span className="text-xs font-bold uppercase tracking-widest text-white/60" style={{ fontFamily: "var(--font-anton)" }}>
+          Package {index + 1}
+        </span>
+        <button type="button" onClick={onRemove} className="text-xs text-white/40 hover:text-white transition-colors">
+          Remove ×
+        </button>
       </div>
-      <div>
-        <FieldLabel required>Package name</FieldLabel>
-        <Input value={pkg.name} onChange={(e) => onChange({ name: e.target.value })} placeholder='e.g. "Technical Analysis Only"' />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+      {/* Card body */}
+      <div className="p-6 space-y-5">
+        {/* Name — prominent */}
+        <Input
+          value={pkg.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+          placeholder='Package name — e.g. "Technical Analysis" or "Full Training"'
+          className="text-base font-semibold"
+        />
+        {/* Price + billing side by side */}
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <FieldLabel required>Price (USD)</FieldLabel>
+            <div className="flex items-center border-2 border-black bg-transparent focus-within:ring-2 focus-within:ring-[#007B6F]">
+              <span className="pl-3 pr-1 text-sm font-semibold text-black/40">$</span>
+              <input
+                type="number" min={0}
+                value={pkg.price || ""}
+                onChange={(e) => onChange({ price: Number(e.target.value) })}
+                placeholder="0"
+                className="w-28 py-2.5 pr-3 text-sm bg-transparent focus:outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <FieldLabel required>Billing</FieldLabel>
+            <div className="flex gap-2">
+              {([{ value: "monthly", label: "Monthly" }, { value: "weekly", label: "Weekly" }, { value: "one_time", label: "One-time" }] as const).map((opt) => (
+                <button key={opt.value} type="button"
+                  onClick={() => onChange({ billing_cadence: opt.value })}
+                  className={`px-4 py-2.5 text-sm font-semibold border-2 transition-colors ${pkg.billing_cadence === opt.value ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/30 hover:border-black"}`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Includes pills */}
         <div>
-          <FieldLabel required>Price (USD)</FieldLabel>
-          <Input type="number" min={0} value={pkg.price || ""} onChange={(e) => onChange({ price: Number(e.target.value) })} placeholder="e.g. 150" />
+          <FieldLabel>What&apos;s included</FieldLabel>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {INCLUDE_OPTIONS.map((opt) => (
+              <button key={opt} type="button" onClick={() => toggle(opt)}
+                className={`px-3 py-2 text-xs font-medium border-2 transition-colors ${pkg.includes.includes(opt) ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/20 hover:border-black"}`}>
+                {pkg.includes.includes(opt) ? "✓ " : ""}{opt}
+              </button>
+            ))}
+          </div>
         </div>
-        <div>
-          <FieldLabel required>Billing</FieldLabel>
-          <Select value={pkg.billing_cadence} onChange={(e) => onChange({ billing_cadence: e.target.value as CoachPackage["billing_cadence"] })}>
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="one_time">One-time</option>
-          </Select>
-        </div>
-      </div>
-      <div>
-        <FieldLabel>What&apos;s included</FieldLabel>
-        <div className="flex flex-wrap gap-2 mt-1">
-          {INCLUDE_OPTIONS.map((opt) => (
-            <button key={opt} type="button" onClick={() => toggle(opt)}
-              className={`px-3 py-1.5 text-xs border-2 transition-colors ${pkg.includes.includes(opt) ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <FieldLabel>Short description (optional)</FieldLabel>
-        <Input value={pkg.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="e.g. Video breakdown of each throw with written cues" />
+        {/* Description */}
+        <Input
+          value={pkg.description}
+          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder="One-line description for athletes — e.g. Weekly video review + written technical cues (optional)"
+        />
       </div>
     </div>
   );
@@ -287,8 +335,8 @@ function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
             <PackageForm key={pkg.id} pkg={pkg} index={i} onChange={(p) => updatePkg(i, p)} onRemove={() => removePkg(i)} />
           ))}
         </div>
-        <button type="button" onClick={addPkg} className="border-2 border-dashed border-black/30 w-full py-3 text-sm text-black/50 hover:border-black hover:text-black transition-colors mt-4">
-          + Add package
+        <button type="button" onClick={addPkg} className="border-2 border-black w-full py-3 text-sm font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors mt-2">
+          + Add another package
         </button>
       </div>
 
@@ -481,7 +529,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
           <p className="text-sm text-black/50">{STEP_SUBTITLES[step]}</p>
         </div>
         {error && <div className="border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-700 mb-6">{error}</div>}
-        <div className="bg-[#D7D7D7] border-2 border-black p-6 sm:p-8 mb-8">
+        <div className={`bg-[#D7D7D7] border-2 border-black mb-8 ${step === 3 || step === 4 ? "p-6" : "p-6 sm:p-8"}`}>
           {step === 1 && <Step1 data={data} onChange={update} />}
           {step === 2 && <Step2 data={data} onChange={update} />}
           {step === 3 && <Step3 data={data} onChange={update} />}
