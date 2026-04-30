@@ -19,5 +19,5 @@ export default async function CoachOnboardingPage() {
   // Pre-fill name from signup
   const fullName = user.user_metadata?.full_name ?? "";
 
-  return <OnboardingWizard initialName={fullName} />;
+  return <OnboardingWizard initialName={fullName} userId={user.id} />;
 }

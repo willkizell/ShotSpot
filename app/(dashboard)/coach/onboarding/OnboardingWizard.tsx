@@ -1,89 +1,188 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { submitCoachProfile, type OnboardingData } from "@/lib/coach/actions";
 import type { CoachingHistoryEntry, CoachPackage, CoachLink } from "@/lib/types/coach";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const EVENTS = [
   { key: "shot_put", label: "Shot Put" },
-  { key: "discus",   label: "Discus"   },
-  { key: "hammer",   label: "Hammer"   },
-  { key: "javelin",  label: "Javelin"  },
+  { key: "discus",   label: "Discus" },
+  { key: "hammer",   label: "Hammer" },
+  { key: "javelin",  label: "Javelin" },
 ];
 
-const TOTAL_STEPS = 5;
+const PREDEFINED_LINKS = [
+  { label: "Instagram",        placeholder: "https://instagram.com/yourhandle" },
+  { label: "LinkedIn",         placeholder: "https://linkedin.com/in/yourname" },
+  { label: "Coaching profile", placeholder: "USATF page, athletic.net, personal site…" },
+];
+const PREDEFINED_LABELS = PREDEFINED_LINKS.map((p) => p.label);
 
-function StepLabel({ step, label, current }: { step: number; label: string; current: number }) {
-  const done = step < current;
-  const active = step === current;
-  return (
-    <div className="flex items-center gap-2">
-      <div className={`w-7 h-7 flex items-center justify-center text-xs font-bold border-2 flex-shrink-0 transition-colors ${done ? "bg-[#007B6F] border-[#007B6F] text-white" : active ? "bg-black border-black text-[#D7D7D7]" : "border-black/20 text-black/30"}`}>
-        {done ? "✓" : step}
-      </div>
-      <span className={`text-xs hidden sm:block ${active ? "font-semibold" : "text-black/40"}`}>{label}</span>
-    </div>
-  );
+const INCLUDE_OPTIONS = [
+  "Video analysis & feedback",
+  "Training plan",
+  "Lifting / strength plan",
+  "Weekly check-in call",
+  "Unlimited messaging",
+  "Competition prep",
+  "Technique drills",
+  "Nutrition guidance",
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function newPackage(): CoachPackage {
+  return {
+    id: Math.random().toString(36).slice(2),
+    name: "",
+    description: "",
+    price: 0,
+    billing_cadence: "monthly",
+    includes: [],
+  };
 }
+
+async function uploadImage(bucket: string, file: File, userId: string): Promise<string | null> {
+  const supabase = createClient();
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const slug = bucket === "coach-avatars" ? "avatar" : "banner";
+  const path = `${userId}/${slug}.${ext}`;
+  const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+  if (error) { console.error("Upload error:", error); return null; }
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ─── UI Primitives ────────────────────────────────────────────────────────────
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="block text-sm font-medium mb-1.5">
+    <label className="block text-[10px] font-bold uppercase tracking-widest text-black/40 mb-1.5" style={{ fontFamily: "var(--font-anton)" }}>
       {children}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
   );
 }
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`w-full border-2 border-black bg-transparent px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#007B6F] ${props.className ?? ""}`} />;
+  return (
+    <input
+      {...props}
+      className={`w-full border-2 border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007B6F] ${props.className ?? ""}`}
+    />
+  );
 }
 
 function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={`w-full border-2 border-black bg-transparent px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#007B6F] resize-none ${props.className ?? ""}`} />;
+  return (
+    <textarea
+      {...props}
+      className={`w-full border-2 border-black bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007B6F] resize-none ${props.className ?? ""}`}
+    />
+  );
 }
 
 function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`w-full border-2 border-black bg-[#D7D7D7] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#007B6F] ${props.className ?? ""}`} />;
+  return (
+    <select
+      {...props}
+      className={`w-full border-2 border-black bg-[#D7D7D7] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#007B6F] ${props.className ?? ""}`}
+    />
+  );
 }
 
-function Step1({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
+// ─── Sidebar Section ──────────────────────────────────────────────────────────
+
+function SidebarSection({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="space-y-5">
-      <div>
-        <FieldLabel required>Full name</FieldLabel>
-        <Input value={data.full_name} onChange={(e) => onChange({ full_name: e.target.value })} placeholder="Your full name" />
-      </div>
-      <div>
-        <FieldLabel>Organization / Club (optional)</FieldLabel>
-        <Input value={data.organization} onChange={(e) => onChange({ organization: e.target.value })} placeholder="e.g. Webb Throws Academy" />
-      </div>
-      <div>
-        <FieldLabel>Coaching format</FieldLabel>
-        <div className="flex gap-3 mt-1">
-          {[{ value: true, label: "Remote" }, { value: false, label: "In-Person" }].map((opt) => (
-            <button key={String(opt.value)} type="button" onClick={() => onChange({ remote: opt.value })}
-              className={`flex-1 py-2.5 text-sm font-semibold border-2 transition-colors ${data.remote === opt.value ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <FieldLabel required={!data.remote}>Your location{data.remote ? " (optional)" : ""}</FieldLabel>
-        <Input value={data.location} onChange={(e) => onChange({ location: e.target.value })} placeholder="City, State (e.g. Eugene, OR)" />
-        {data.remote && <p className="text-xs text-black/40 mt-1">Helpful for athletes to know your time zone, but not required for remote coaching.</p>}
-      </div>
-      <LinksSection links={data.links} onChange={(links) => onChange({ links })} />
+    <div className="border-b-2 border-black">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-black/[0.03] transition-colors"
+      >
+        <span className="text-sm font-bold tracking-widest uppercase" style={{ fontFamily: "var(--font-anton)" }}>
+          {title}
+        </span>
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
+          className={`transition-transform duration-200 text-black/30 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M1 3l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && <div className="px-6 pb-6 space-y-4">{children}</div>}
     </div>
   );
 }
 
-const PREDEFINED_LINKS = [
-  { label: "Instagram", placeholder: "https://instagram.com/yourhandle" },
-  { label: "LinkedIn", placeholder: "https://linkedin.com/in/yourname" },
-  { label: "Coaching profile", placeholder: "USATF page, athletic.net, personal site, etc." },
-];
-const PREDEFINED_LABELS = PREDEFINED_LINKS.map((p) => p.label);
+// ─── Image Upload Button ──────────────────────────────────────────────────────
+
+function ImageUploadButton({
+  label,
+  hint,
+  previewUrl,
+  aspect,
+  onFile,
+  uploading,
+}: {
+  label: string;
+  hint: string;
+  previewUrl: string | null;
+  aspect: "square" | "banner";
+  onFile: (file: File) => void;
+  uploading: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className={aspect === "square" ? "flex-shrink-0" : "flex-1"}>
+      <FieldLabel>{label}</FieldLabel>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className={`relative border-2 border-dashed border-black/30 hover:border-black transition-colors overflow-hidden flex items-center justify-center bg-black/[0.02] ${
+          aspect === "banner" ? "w-full h-20" : "w-20 h-20"
+        }`}
+      >
+        {previewUrl ? (
+          <img src={previewUrl} alt="" className="w-full h-full object-cover absolute inset-0" />
+        ) : uploading ? (
+          <span className="text-[10px] text-black/40">Uploading…</span>
+        ) : (
+          <span className="text-[10px] text-black/40 text-center px-2 leading-tight">{hint}</span>
+        )}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Links Section ────────────────────────────────────────────────────────────
 
 function LinksSection({ links, onChange }: { links: CoachLink[]; onChange: (links: CoachLink[]) => void }) {
   const getUrl = (label: string) => links.find((l) => l.label === label)?.url ?? "";
@@ -102,181 +201,67 @@ function LinksSection({ links, onChange }: { links: CoachLink[]; onChange: (link
   };
 
   return (
-    <div className="border-t border-black/10 pt-5">
-      <p className="text-sm font-medium mb-1">Links & online presence</p>
-      <p className="text-xs text-black/50 mb-4">All optional. These appear on your profile and help verify your background.</p>
-      <div className="space-y-3">
-        {PREDEFINED_LINKS.map(({ label, placeholder }) => (
-          <div key={label} className="flex items-center gap-3">
-            <span className="text-sm w-32 flex-shrink-0 text-black/70">{label}</span>
-            <Input type="url" value={getUrl(label)} onChange={(e) => setUrl(label, e.target.value)} placeholder={placeholder} />
-          </div>
-        ))}
-        {customLinks.map((link, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <Input value={link.label} onChange={(e) => updateCustom(i, { label: e.target.value })} placeholder="Link name" className="w-32 flex-shrink-0" />
-            <Input type="url" value={link.url} onChange={(e) => updateCustom(i, { url: e.target.value })} placeholder="https://..." />
-            <button type="button" onClick={() => removeCustom(i)} className="text-black/30 hover:text-black flex-shrink-0 text-lg leading-none">✕</button>
-          </div>
-        ))}
-      </div>
-      <button type="button" onClick={addCustom} className="mt-3 text-sm text-[#007B6F] hover:underline">+ Add another link</button>
-    </div>
-  );
-}
-
-function Step2({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
-  return (
-    <div className="space-y-5">
-      <div>
-        <FieldLabel required>Events you coach</FieldLabel>
-        <div className="flex flex-wrap gap-2 mt-1">
-          {EVENTS.map((e) => (
-            <button key={e.key} type="button"
-              onClick={() => onChange({ events: data.events.includes(e.key) ? data.events.filter((k) => k !== e.key) : [...data.events, e.key] })}
-              className={`px-4 py-2.5 text-sm font-semibold border-2 transition-colors ${data.events.includes(e.key) ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
-              {e.label}
-            </button>
-          ))}
+    <div className="space-y-3">
+      <p className="text-xs text-black/40">All optional — appear on your profile.</p>
+      {PREDEFINED_LINKS.map(({ label, placeholder }) => (
+        <div key={label}>
+          <p className="text-xs text-black/50 mb-1">{label}</p>
+          <Input type="url" value={getUrl(label)} onChange={(e) => setUrl(label, e.target.value)} placeholder={placeholder} />
         </div>
-      </div>
-      <div>
-        <FieldLabel required>Years coaching</FieldLabel>
-        <Input type="number" min={0} max={60} value={data.years_coaching || ""} onChange={(e) => onChange({ years_coaching: Number(e.target.value) })} placeholder="e.g. 10" className="max-w-xs" />
-      </div>
-      <div>
-        <FieldLabel required>Your coaching bio</FieldLabel>
-        <Textarea rows={5} maxLength={600} value={data.short_bio} onChange={(e) => onChange({ short_bio: e.target.value })} placeholder="Tell athletes who you are, what you coach, and what makes your approach different." />
-        <p className="text-xs text-black/40 mt-1">{data.short_bio.length}/600 characters</p>
-      </div>
+      ))}
+      {customLinks.map((link, i) => (
+        <div key={i} className="flex gap-2">
+          <Input value={link.label} onChange={(e) => updateCustom(i, { label: e.target.value })} placeholder="Link name" className="w-28 flex-shrink-0" />
+          <Input type="url" value={link.url} onChange={(e) => updateCustom(i, { url: e.target.value })} placeholder="https://…" />
+          <button type="button" onClick={() => removeCustom(i)} className="text-black/25 hover:text-black text-xl leading-none flex-shrink-0 px-1">×</button>
+        </div>
+      ))}
+      <button type="button" onClick={addCustom} className="text-sm text-[#007B6F] hover:underline">+ Add another link</button>
     </div>
   );
 }
 
-function HistoryEntryForm({ entry, index, onChange, onRemove }: { entry: CoachingHistoryEntry; index: number; onChange: (p: Partial<CoachingHistoryEntry>) => void; onRemove: () => void }) {
+// ─── History Entry ────────────────────────────────────────────────────────────
+
+function HistoryEntryForm({
+  entry,
+  index,
+  onChange,
+  onRemove,
+}: {
+  entry: CoachingHistoryEntry;
+  index: number;
+  onChange: (p: Partial<CoachingHistoryEntry>) => void;
+  onRemove: () => void;
+}) {
   return (
-    <div className="flex gap-5">
-      {/* Timeline left column */}
+    <div className="flex gap-4">
       <div className="flex flex-col items-center flex-shrink-0">
-        <div className="w-9 h-9 bg-[#007B6F] flex items-center justify-center text-white text-sm font-bold" style={{ fontFamily: "var(--font-anton)" }}>
+        <div className="w-7 h-7 bg-[#007B6F] flex items-center justify-center text-white text-xs font-bold" style={{ fontFamily: "var(--font-anton)" }}>
           {index + 1}
         </div>
         <div className="w-px flex-1 bg-black/10 mt-2" />
       </div>
-      {/* Content */}
-      <div className="flex-1 pb-8 space-y-3">
-        <div className="flex items-start gap-3">
-          <Input
-            value={entry.role}
-            onChange={(e) => onChange({ role: e.target.value })}
-            placeholder="Role / Title — e.g. Head Throws Coach"
-            className="flex-1 font-semibold"
-          />
-          <button type="button" onClick={onRemove} className="mt-2.5 text-black/25 hover:text-black transition-colors text-xl leading-none flex-shrink-0">×</button>
+      <div className="flex-1 pb-6 space-y-2.5">
+        <div className="flex items-start gap-2">
+          <Input value={entry.role} onChange={(e) => onChange({ role: e.target.value })} placeholder="Role — e.g. Head Throws Coach" className="flex-1 font-semibold" />
+          <button type="button" onClick={onRemove} className="mt-2 text-black/25 hover:text-black text-xl leading-none flex-shrink-0">×</button>
         </div>
         <Input value={entry.organization} onChange={(e) => onChange({ organization: e.target.value })} placeholder="Organization — e.g. University of Oregon" />
-        <div className="flex items-center gap-3">
-          <Input type="number" min={1960} max={new Date().getFullYear()} value={entry.start_year || ""} onChange={(e) => onChange({ start_year: Number(e.target.value) })} placeholder="Start year" className="max-w-[130px]" />
+        <div className="flex items-center gap-2">
+          <Input type="number" min={1960} max={new Date().getFullYear()} value={entry.start_year || ""} onChange={(e) => onChange({ start_year: Number(e.target.value) })} placeholder="Start year" className="max-w-[110px]" />
           <span className="text-black/30 font-medium">—</span>
-          <Input type="number" min={1960} max={new Date().getFullYear()} value={entry.end_year ?? ""} onChange={(e) => onChange({ end_year: e.target.value ? Number(e.target.value) : null })} placeholder="End year (blank = present)" />
+          <Input type="number" min={1960} max={new Date().getFullYear()} value={entry.end_year ?? ""} onChange={(e) => onChange({ end_year: e.target.value ? Number(e.target.value) : null })} placeholder="End (blank = now)" />
         </div>
-        <Textarea rows={2} maxLength={200} value={entry.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="What were your key responsibilities or athlete achievements? (optional)" />
+        <Textarea rows={2} maxLength={200} value={entry.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="Key achievements or responsibilities (optional)" />
       </div>
     </div>
   );
 }
 
-function Step3({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
-  const addEntry = () => onChange({ coaching_history: [...data.coaching_history, { role: "", organization: "", start_year: new Date().getFullYear(), end_year: null, description: "" }] });
-  const updateEntry = (i: number, patch: Partial<CoachingHistoryEntry>) => onChange({ coaching_history: data.coaching_history.map((e, idx) => idx === i ? { ...e, ...patch } : e) });
-  const removeEntry = (i: number) => onChange({ coaching_history: data.coaching_history.filter((_, idx) => idx !== i) });
-  return (
-    <div>
-      <p className="text-sm text-black/60 mb-6">Add your past coaching roles in reverse chronological order. Athletes take this seriously.</p>
-      {data.coaching_history.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 border-2 border-black/10">
-          <p className="text-sm text-black/40 mb-4">No experience added yet</p>
-          <button type="button" onClick={addEntry} className="bg-black text-[#D7D7D7] px-6 py-2.5 text-sm font-semibold hover:bg-[#007B6F] transition-colors">
-            + Add your first role
-          </button>
-        </div>
-      ) : (
-        <div>
-          {data.coaching_history.map((entry, i) => (
-            <HistoryEntryForm key={i} entry={entry} index={i} onChange={(p) => updateEntry(i, p)} onRemove={() => removeEntry(i)} />
-          ))}
-          <button type="button" onClick={addEntry} className="border-2 border-black px-6 py-2.5 text-sm font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors">
-            + Add another role
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+// ─── Package Editor ───────────────────────────────────────────────────────────
 
-const CADENCE_LABELS: Record<string, string> = { monthly: "/ mo", weekly: "/ wk", one_time: "one-time" };
-
-const INCLUDE_OPTIONS = [
-  "Video analysis & feedback",
-  "Training plan",
-  "Lifting / strength plan",
-  "Weekly check-in call",
-  "Unlimited messaging",
-  "Competition prep",
-  "Technique drills",
-  "Nutrition guidance",
-];
-
-function newPackage(): CoachPackage {
-  return { id: Math.random().toString(36).slice(2), name: "", description: "", price: 0, billing_cadence: "monthly", includes: [] };
-}
-
-function PackagePreview({ pkg }: { pkg: CoachPackage }) {
-  const cadenceLabel: Record<string, string> = { monthly: "/ month", weekly: "/ week", one_time: "one-time" };
-  return (
-    <div className="border-2 border-black bg-[#D7D7D7] flex flex-col h-full">
-      <div className="p-5 border-b-2 border-black">
-        <p className="text-xs uppercase tracking-widest text-black/40 mb-2" style={{ fontFamily: "var(--font-anton)" }}>Coaching Package</p>
-        <h3 className="text-2xl tracking-tight leading-none mb-3" style={{ fontFamily: "var(--font-anton)" }}>
-          {pkg.name || <span className="text-black/25 italic font-normal text-base" style={{ fontFamily: "inherit" }}>Package name</span>}
-        </h3>
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-4xl font-bold tracking-tight">{pkg.price > 0 ? `$${pkg.price}` : <span className="text-black/25">$—</span>}</span>
-          <span className="text-sm text-black/50">{cadenceLabel[pkg.billing_cadence]}</span>
-        </div>
-      </div>
-      {pkg.description && (
-        <div className="px-5 pt-4">
-          <p className="text-sm text-black/70 leading-relaxed">{pkg.description}</p>
-        </div>
-      )}
-      <div className="p-5 flex-1">
-        {pkg.includes.length === 0 ? (
-          <p className="text-xs text-black/30 italic">Toggle items on the left to see what&apos;s included</p>
-        ) : (
-          <ul className="space-y-2.5">
-            {pkg.includes.map((item) => (
-              <li key={item} className="flex items-center gap-2.5 text-sm">
-                <div className="w-5 h-5 bg-[#007B6F] flex items-center justify-center flex-shrink-0">
-                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </div>
-                {item}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="px-5 pb-5 border-t border-black/10 pt-4">
-        <div className="bg-black text-[#D7D7D7] text-center py-3 text-sm font-semibold opacity-40 select-none">
-          Apply to work together
-        </div>
-        <p className="text-xs text-center text-black/25 mt-2">Preview only — not live</p>
-      </div>
-    </div>
-  );
-}
-
-function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
+function PackageEditorSection({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
   const [activeIdx, setActiveIdx] = useState(0);
 
   const addPkg = () => {
@@ -295,219 +280,296 @@ function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
   const active = data.packages[activeIdx] ?? null;
 
   return (
-    <div className="space-y-5">
-      {/* Enrollment + roster/response in one settings row */}
-      <div className="border-2 border-black p-5 space-y-5">
-        <div>
-          <FieldLabel required>Enrollment type</FieldLabel>
-          <div className="flex gap-3 mt-1">
-            {[{ value: "instant_join", label: "Instant Join", sub: "Athletes pay and join immediately" }, { value: "application_required", label: "Application Required", sub: "You review each athlete before accepting" }].map((opt) => (
-              <button key={opt.value} type="button" onClick={() => onChange({ intake_mode: opt.value as OnboardingData["intake_mode"] })}
-                className={`flex-1 p-3 text-left border-2 transition-colors ${data.intake_mode === opt.value ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
-                <p className="text-sm font-semibold">{opt.label}</p>
-                <p className={`text-xs mt-0.5 ${data.intake_mode === opt.value ? "text-white/60" : "text-black/40"}`}>{opt.sub}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-5">
-          <div>
-            <FieldLabel required>Max athletes on roster</FieldLabel>
-            <Input type="number" min={1} max={200} value={data.athlete_capacity || ""} onChange={(e) => onChange({ athlete_capacity: Number(e.target.value) })} placeholder="e.g. 15" />
-          </div>
-          <div>
-            <FieldLabel required>Typical response time</FieldLabel>
-            <Select value={data.response_time} onChange={(e) => onChange({ response_time: e.target.value })}>
-              <option value="">Select...</option>
-              <option value="24hr">Within 24 hours</option>
-              <option value="48hr">Within 48 hours</option>
-              <option value="72hr">Within 72 hours</option>
-            </Select>
-          </div>
-        </div>
-        <p className="text-xs text-black/40 border-t border-black/10 pt-4">ShotSpot charges a 15% platform fee on completed payments. Your listed price is what athletes see.</p>
+    <div className="-mx-6">
+      {/* Tab bar */}
+      <div className="flex items-center border-t border-b border-black/10 overflow-x-auto">
+        {data.packages.map((pkg, i) => (
+          <button
+            key={pkg.id}
+            type="button"
+            onClick={() => setActiveIdx(i)}
+            className={`px-4 py-2.5 text-xs font-semibold border-r border-black/10 flex-shrink-0 transition-colors ${
+              i === activeIdx ? "bg-black text-[#D7D7D7]" : "hover:bg-black/5"
+            }`}
+          >
+            {pkg.name.trim() || `Package ${i + 1}`}
+          </button>
+        ))}
+        <button type="button" onClick={addPkg} className="px-4 py-2.5 text-xs font-semibold text-[#007B6F] hover:bg-[#007B6F]/10 flex-shrink-0 whitespace-nowrap">
+          + Add package
+        </button>
+        {active && data.packages.length > 1 && (
+          <button type="button" onClick={() => removePkg(activeIdx)} className="ml-auto px-3 py-2.5 text-xs text-black/25 hover:text-red-500 border-l border-black/10 flex-shrink-0">
+            Remove
+          </button>
+        )}
       </div>
 
-      {/* Package builder */}
-      <div>
-        <div className="flex items-center gap-0 mb-0 border-2 border-b-0 border-black overflow-x-auto">
-          {data.packages.map((pkg, i) => (
-            <button key={pkg.id} type="button" onClick={() => setActiveIdx(i)}
-              className={`px-5 py-3 text-sm font-semibold border-r-2 border-black flex-shrink-0 transition-colors ${i === activeIdx ? "bg-black text-[#D7D7D7]" : "hover:bg-black/5"}`}>
-              {pkg.name.trim() || `Package ${i + 1}`}
-            </button>
-          ))}
-          <button type="button" onClick={addPkg}
-            className="px-5 py-3 text-sm font-semibold text-[#007B6F] hover:bg-[#007B6F]/10 flex-shrink-0 transition-colors">
-            + Add package
+      {data.packages.length === 0 ? (
+        <div className="px-6 py-8 text-center">
+          <p className="text-xs text-black/30 mb-3">No packages yet</p>
+          <button type="button" onClick={addPkg} className="bg-black text-[#D7D7D7] px-5 py-2 text-xs font-semibold hover:bg-[#007B6F] transition-colors">
+            + Create first package
           </button>
-          <div className="flex-1" />
-          {active && data.packages.length > 1 && (
-            <button type="button" onClick={() => removePkg(activeIdx)}
-              className="px-4 py-3 text-xs text-black/30 hover:text-red-500 border-l-2 border-black flex-shrink-0 transition-colors">
-              Remove ×
-            </button>
+        </div>
+      ) : active ? (
+        <div className="px-6 pt-4 space-y-4">
+          <Input
+            value={active.name}
+            onChange={(e) => updatePkg(activeIdx, { name: e.target.value })}
+            placeholder='"Basic", "Premium", "Elite"…'
+            className="text-sm font-semibold"
+          />
+          <div>
+            <FieldLabel required>Price & billing</FieldLabel>
+            <div className="flex gap-2 flex-wrap">
+              <div className="flex items-center border-2 border-black focus-within:ring-2 focus-within:ring-[#007B6F]">
+                <span className="pl-3 text-sm font-semibold text-black/40">$</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={active.price || ""}
+                  onChange={(e) => updatePkg(activeIdx, { price: Number(e.target.value) })}
+                  placeholder="0"
+                  className="w-20 py-2 px-2 text-sm bg-transparent focus:outline-none"
+                />
+              </div>
+              {([{ value: "monthly", label: "Monthly" }, { value: "weekly", label: "Weekly" }, { value: "one_time", label: "One-time" }] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => updatePkg(activeIdx, { billing_cadence: opt.value })}
+                  className={`px-3 py-2 text-xs font-semibold border-2 transition-colors ${
+                    active.billing_cadence === opt.value ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/30 hover:border-black"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <FieldLabel>What&apos;s included</FieldLabel>
+            <div className="flex flex-wrap gap-1.5">
+              {INCLUDE_OPTIONS.map((opt) => {
+                const on = active.includes.includes(opt);
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => updatePkg(activeIdx, { includes: on ? active.includes.filter((x) => x !== opt) : [...active.includes, opt] })}
+                    className={`px-2.5 py-1.5 text-xs font-medium border-2 transition-colors ${
+                      on ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/20 hover:border-black"
+                    }`}
+                  >
+                    {on ? "✓ " : ""}{opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <FieldLabel>Description for athletes</FieldLabel>
+            <Textarea
+              rows={3}
+              value={active.description}
+              onChange={(e) => updatePkg(activeIdx, { description: e.target.value })}
+              placeholder="What makes this package special?"
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ─── Profile Preview ──────────────────────────────────────────────────────────
+
+function MiniPackageCard({ pkg }: { pkg: CoachPackage }) {
+  const cadenceLabel: Record<string, string> = { monthly: "/ mo", weekly: "/ wk", one_time: "one-time" };
+  return (
+    <div className="border-2 border-black p-4 bg-white/50">
+      <p className="text-[9px] uppercase tracking-widest text-black/40 mb-1" style={{ fontFamily: "var(--font-anton)" }}>Package</p>
+      <p className="text-sm font-bold leading-tight" style={{ fontFamily: "var(--font-anton)" }}>
+        {pkg.name || <span className="font-normal italic text-black/25 text-xs">Unnamed</span>}
+      </p>
+      <p className="text-xl font-bold mt-1.5 tracking-tight">
+        {pkg.price > 0 ? `$${pkg.price}` : <span className="text-black/20">$—</span>}
+        <span className="text-xs font-normal text-black/40 ml-1">{cadenceLabel[pkg.billing_cadence]}</span>
+      </p>
+      {pkg.includes.length > 0 && (
+        <ul className="mt-2.5 space-y-1.5">
+          {pkg.includes.slice(0, 4).map((item) => (
+            <li key={item} className="flex items-center gap-1.5 text-xs text-black/70">
+              <div className="w-3.5 h-3.5 bg-[#007B6F] flex items-center justify-center flex-shrink-0">
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                  <path d="M1.5 4l1.5 1.5 3.5-3" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              {item}
+            </li>
+          ))}
+          {pkg.includes.length > 4 && <li className="text-xs text-black/30">+{pkg.includes.length - 4} more</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CoachProfilePreview({
+  data,
+  avatarUrl,
+  bannerUrl,
+  profileStyle,
+}: {
+  data: OnboardingData;
+  avatarUrl: string | null;
+  bannerUrl: string | null;
+  profileStyle: "light" | "dark" | "teal";
+}) {
+  const bannerStyle: React.CSSProperties = bannerUrl
+    ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : {
+        backgroundColor:
+          profileStyle === "dark" ? "#000000" : profileStyle === "teal" ? "#007B6F" : "#C0C0C0",
+      };
+
+  const initials = data.full_name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <div className="bg-[#D7D7D7] border-2 border-black overflow-hidden select-none">
+      {/* Banner */}
+      <div className="h-36 relative" style={bannerStyle}>
+        <div className="absolute -bottom-10 left-6 w-20 h-20 border-4 border-[#D7D7D7] bg-[#B4B4B4] overflow-hidden flex items-center justify-center">
+          {avatarUrl ? (
+            <img src={avatarUrl} className="w-full h-full object-cover" alt="" />
+          ) : (
+            <span className="text-xl font-bold text-black/25" style={{ fontFamily: "var(--font-anton)" }}>
+              {initials || "?"}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="pt-14 px-6 pb-8 space-y-5">
+        {/* Name & meta */}
+        <div>
+          <h1 className="text-3xl leading-none tracking-tight" style={{ fontFamily: "var(--font-anton)" }}>
+            {data.full_name || <span className="text-black/20 text-2xl">YOUR NAME</span>}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-sm text-black/50">
+            {data.organization && <span>{data.organization}</span>}
+            {data.organization && (data.location || data.remote) && <span>·</span>}
+            {data.location && <span>{data.location}</span>}
+            {data.remote && (
+              <span className="border border-black/20 px-2 py-0.5 text-xs">Remote</span>
+            )}
+          </div>
+          {data.years_coaching > 0 && (
+            <p className="text-xs text-black/40 mt-1">{data.years_coaching} years coaching</p>
           )}
         </div>
 
-        {data.packages.length === 0 ? (
-          <div className="border-2 border-black p-12 text-center">
-            <p className="text-sm text-black/40 mb-4">No packages yet.</p>
-            <button type="button" onClick={addPkg} className="bg-black text-[#D7D7D7] px-6 py-2.5 text-sm font-semibold hover:bg-[#007B6F] transition-colors">
-              + Create first package
-            </button>
+        {/* Events */}
+        {data.events.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {data.events.map((e) => {
+              const ev = EVENTS.find((ev) => ev.key === e);
+              return (
+                <span key={e} className="border-2 border-black px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+                  {ev?.label ?? e}
+                </span>
+              );
+            })}
           </div>
-        ) : active && (
-          <div className="border-2 border-black grid grid-cols-2">
-            {/* Left: editor */}
-            <div className="border-r-2 border-black p-6 space-y-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-black/30" style={{ fontFamily: "var(--font-anton)" }}>Configure</p>
-              <Input
-                value={active.name}
-                onChange={(e) => updatePkg(activeIdx, { name: e.target.value })}
-                placeholder='"Technical Analysis", "Full Training", "Elite"…'
-                className="text-base font-semibold"
-              />
-              <div>
-                <FieldLabel required>Price & billing</FieldLabel>
-                <div className="flex gap-2 mt-1">
-                  <div className="flex items-center border-2 border-black focus-within:ring-2 focus-within:ring-[#007B6F]">
-                    <span className="pl-3 text-sm font-semibold text-black/40">$</span>
-                    <input type="number" min={0} value={active.price || ""}
-                      onChange={(e) => updatePkg(activeIdx, { price: Number(e.target.value) })}
-                      placeholder="0" className="w-24 py-2.5 px-2 text-sm bg-transparent focus:outline-none" />
-                  </div>
-                  {([{ value: "monthly", label: "Monthly" }, { value: "weekly", label: "Weekly" }, { value: "one_time", label: "One-time" }] as const).map((opt) => (
-                    <button key={opt.value} type="button"
-                      onClick={() => updatePkg(activeIdx, { billing_cadence: opt.value })}
-                      className={`px-3 py-2.5 text-xs font-semibold border-2 transition-colors ${active.billing_cadence === opt.value ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/30 hover:border-black"}`}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <FieldLabel>What&apos;s included</FieldLabel>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {INCLUDE_OPTIONS.map((opt) => {
-                    const on = active.includes.includes(opt);
-                    return (
-                      <button key={opt} type="button"
-                        onClick={() => updatePkg(activeIdx, { includes: on ? active.includes.filter((x) => x !== opt) : [...active.includes, opt] })}
-                        className={`px-2.5 py-1.5 text-xs font-medium border-2 transition-colors ${on ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/20 hover:border-black"}`}>
-                        {on ? "✓ " : ""}{opt}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <FieldLabel>Description for athletes</FieldLabel>
-                <Textarea rows={3} value={active.description}
-                  onChange={(e) => updatePkg(activeIdx, { description: e.target.value })}
-                  placeholder="What makes this package great? Athletes read this before applying." />
-              </div>
+        )}
+
+        {/* Bio */}
+        {data.short_bio ? (
+          <p className="text-sm text-black/70 leading-relaxed">{data.short_bio}</p>
+        ) : (
+          <p className="text-sm text-black/20 italic">Your coaching bio will appear here…</p>
+        )}
+
+        <div className="h-px bg-black/10" />
+
+        {/* Packages */}
+        {data.packages.length > 0 ? (
+          <div>
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-3" style={{ fontFamily: "var(--font-anton)" }}>
+              Coaching Packages
+            </h2>
+            <div
+              className="grid gap-3"
+              style={{ gridTemplateColumns: `repeat(${Math.min(data.packages.length, 2)}, 1fr)` }}
+            >
+              {data.packages.map((pkg) => (
+                <MiniPackageCard key={pkg.id} pkg={pkg} />
+              ))}
             </div>
-            {/* Right: live preview */}
-            <div className="flex flex-col bg-black/[0.03]">
-              <div className="px-6 pt-5 pb-3 border-b border-black/10">
-                <p className="text-xs font-bold uppercase tracking-widest text-black/30" style={{ fontFamily: "var(--font-anton)" }}>Athlete view — live preview</p>
-              </div>
-              <div className="p-6 flex-1">
-                <PackagePreview pkg={active} />
-              </div>
+          </div>
+        ) : (
+          <div className="border-2 border-dashed border-black/15 p-4 text-center">
+            <p className="text-xs text-black/20">Your coaching packages will appear here</p>
+          </div>
+        )}
+
+        {/* Experience */}
+        {data.coaching_history.length > 0 && (
+          <div>
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-3" style={{ fontFamily: "var(--font-anton)" }}>
+              Experience
+            </h2>
+            <div className="space-y-3">
+              {data.coaching_history.map((entry, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="w-6 h-6 bg-[#007B6F] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5" style={{ fontFamily: "var(--font-anton)" }}>
+                    {i + 1}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{entry.role || "Role"}</p>
+                    <p className="text-xs text-black/50">
+                      {entry.organization}{entry.organization ? " · " : ""}{entry.start_year}–{entry.end_year ?? "present"}
+                    </p>
+                    {entry.description && <p className="text-xs text-black/50 mt-0.5">{entry.description}</p>}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
 
-function Step5({ data }: { data: OnboardingData }) {
-  const Row = ({ label, value }: { label: string; value: string }) => (
-    <div className="flex items-start justify-between py-3 border-b border-black/10 last:border-0 gap-4">
-      <span className="text-sm text-black/50 flex-shrink-0">{label}</span>
-      <span className="text-sm font-medium text-right">{value || "—"}</span>
-    </div>
-  );
-  return (
-    <div className="space-y-6">
-      <p className="text-sm text-black/60">Review your profile. Once submitted, the ShotSpot team will review it within 1–2 business days.</p>
-      <div className="border-2 border-black p-5">
-        <Row label="Name" value={data.full_name} />
-        <Row label="Organization" value={data.organization} />
-        <Row label="Location" value={`${data.location}${data.remote ? " (Remote)" : ""}`} />
-        <Row label="Events" value={data.events.map((e) => e.replace("_", " ")).join(", ")} />
-        <Row label="Years coaching" value={`${data.years_coaching}`} />
-        <Row label="Enrollment" value={data.intake_mode === "instant_join" ? "Instant Join" : "Application Required"} />
-        <Row label="Roster capacity" value={`${data.athlete_capacity} athletes`} />
-        <Row label="Response time" value={data.response_time} />
-        <Row label="History entries" value={`${data.coaching_history.length}`} />
-      </div>
-      {data.packages.length > 0 && (
-        <div className="border-2 border-black p-5">
-          <p className="text-xs uppercase tracking-widest text-black/40 mb-3" style={{ fontFamily: "var(--font-anton)" }}>Packages ({data.packages.length})</p>
-          <div className="space-y-3">
-            {data.packages.map((pkg) => (
-              <div key={pkg.id} className="flex items-start justify-between gap-4 py-2 border-b border-black/10 last:border-0">
-                <div>
-                  <p className="text-sm font-semibold">{pkg.name || "Unnamed package"}</p>
-                  {pkg.includes.length > 0 && <p className="text-xs text-black/50 mt-0.5">{pkg.includes.slice(0, 3).join(" · ")}{pkg.includes.length > 3 ? ` +${pkg.includes.length - 3} more` : ""}</p>}
-                </div>
-                <p className="text-sm font-bold flex-shrink-0">${pkg.price} <span className="font-normal text-black/50">{CADENCE_LABELS[pkg.billing_cadence]}</span></p>
-              </div>
-            ))}
+        {/* Links */}
+        {data.links.filter((l) => l.url.trim()).length > 0 && (
+          <div>
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-2" style={{ fontFamily: "var(--font-anton)" }}>
+              Links
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {data.links.filter((l) => l.url.trim()).map((link, i) => (
+                <span key={i} className="border border-black/20 px-3 py-1 text-xs text-black/50">{link.label}</span>
+              ))}
+            </div>
           </div>
+        )}
+
+        <div className="border-t border-black/10 pt-3 text-center">
+          <p className="text-[10px] text-black/20 uppercase tracking-widest">Preview — not live</p>
         </div>
-      )}
-      <div className="border-2 border-black p-5">
-        <p className="text-xs uppercase tracking-widest text-black/40 mb-2" style={{ fontFamily: "var(--font-anton)" }}>Bio</p>
-        <p className="text-sm text-black/80 leading-relaxed">{data.short_bio || "—"}</p>
       </div>
-      {data.links.filter((l) => l.url.trim()).length > 0 && (
-        <div className="border-2 border-black p-5">
-          <p className="text-xs uppercase tracking-widest text-black/40 mb-3" style={{ fontFamily: "var(--font-anton)" }}>Links</p>
-          <div className="space-y-2">
-            {data.links.filter((l) => l.url.trim()).map((link, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-xs text-black/50 w-32 flex-shrink-0">{link.label}</span>
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#007B6F] hover:underline truncate">{link.url}</a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-const STEP_LABELS = ["Basic Info", "Your Coaching", "Experience", "Availability", "Review"];
-const STEP_SUBTITLES = ["", "Tell athletes where you're based and how you coach.", "What events do you coach and what's your background?", "Add your past coaching roles. Athletes take this seriously.", "Set your pricing, roster size, and how athletes can join.", "Double-check everything before submitting for review."];
-const STEP_TITLES = ["", "Basic Info", "Your Coaching", "Experience", "Availability & Pricing", "Review & Submit"];
+// ─── Main Component ────────────────────────────────────────────────────────────
 
-function validate(step: number, data: OnboardingData): string | null {
-  if (step === 1) {
-    if (!data.full_name.trim()) return "Full name is required.";
-    if (!data.remote && !data.location.trim()) return "Location is required for in-person coaches.";
-  }
-  if (step === 2) {
-    if (data.events.length === 0) return "Select at least one event.";
-    if (!data.years_coaching || data.years_coaching < 0) return "Enter your years of coaching.";
-    if (!data.short_bio.trim()) return "A coaching bio is required.";
-  }
-  if (step === 4) {
-    if (data.packages.length === 0) return "Add at least one coaching package.";
-    if (data.packages.some((p) => !p.name.trim())) return "All packages need a name.";
-    if (data.packages.some((p) => p.price <= 0)) return "All packages need a price greater than $0.";
-    if (!data.athlete_capacity || data.athlete_capacity < 1) return "Enter your roster capacity.";
-    if (!data.response_time) return "Select a response time.";
-  }
-  return null;
-}
-
-export function OnboardingWizard({ initialName }: { initialName: string }) {
-  const [step, setStep] = useState(1);
+export function OnboardingWizard({ initialName, userId }: { initialName: string; userId: string }) {
   const [data, setData] = useState<OnboardingData>({
     full_name: initialName,
     organization: "",
@@ -522,17 +584,59 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
     packages: [],
     athlete_capacity: 15,
     response_time: "",
+    avatar_url: null,
+    banner_url: null,
   });
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [profileStyle, setProfileStyle] = useState<"light" | "dark" | "teal">("light");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+
+  const [sections, setSections] = useState({
+    identity: true,
+    about: true,
+    links: false,
+    experience: false,
+    packages: true,
+    settings: false,
+  });
+  const toggle = (key: keyof typeof sections) => setSections((s) => ({ ...s, [key]: !s[key] }));
+
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const update = (patch: Partial<OnboardingData>) => setData((d) => ({ ...d, ...patch }));
-  const next = () => { const err = validate(step, data); if (err) { setError(err); return; } setError(""); setStep((s) => s + 1); };
-  const back = () => { setError(""); setStep((s) => s - 1); };
+
+  const handleAvatarFile = async (file: File) => {
+    setUploadingAvatar(true);
+    const url = await uploadImage("coach-avatars", file, userId);
+    if (url) { setAvatarUrl(url); update({ avatar_url: url }); }
+    setUploadingAvatar(false);
+  };
+
+  const handleBannerFile = async (file: File) => {
+    setUploadingBanner(true);
+    const url = await uploadImage("coach-banners", file, userId);
+    if (url) { setBannerUrl(url); update({ banner_url: url }); }
+    setUploadingBanner(false);
+  };
+
   const submit = async () => {
-    const err = validate(step, data);
-    if (err) { setError(err); return; }
+    if (!data.full_name.trim()) { setError("Full name is required."); return; }
+    if (!data.remote && !data.location.trim()) { setError("Location is required for in-person coaches."); return; }
+    if (data.events.length === 0) { setError("Select at least one event you coach."); return; }
+    if (!data.years_coaching || data.years_coaching < 0) { setError("Enter your years of coaching."); return; }
+    if (!data.short_bio.trim()) { setError("A coaching bio is required."); return; }
+    if (data.packages.length === 0) { setError("Add at least one coaching package."); return; }
+    if (data.packages.some((p) => !p.name.trim())) { setError("All packages need a name."); return; }
+    if (data.packages.some((p) => p.price <= 0)) { setError("All packages need a price greater than $0."); return; }
+    if (!data.athlete_capacity || data.athlete_capacity < 1) { setError("Enter your roster capacity."); return; }
+    if (!data.response_time) { setError("Select a response time."); return; }
+
+    setError("");
     setSubmitting(true);
     const result = await submitCoachProfile(data);
     if (result?.error) { setError(result.error); setSubmitting(false); return; }
@@ -544,7 +648,9 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
       <div className="min-h-screen bg-[#D7D7D7] flex items-center justify-center px-4">
         <div className="max-w-lg w-full text-center">
           <div className="w-16 h-16 bg-[#007B6F] flex items-center justify-center mx-auto mb-6">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           </div>
           <h1 className="text-3xl sm:text-4xl tracking-tight leading-none mb-4" style={{ fontFamily: "var(--font-anton)" }}>
             APPLICATION RECEIVED
@@ -553,7 +659,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
             Thanks, {data.full_name.split(" ")[0]}. We&apos;ll review your profile within 1–2 business days.
           </p>
           <p className="text-sm text-black/50 mb-8">
-            Check your inbox for a confirmation email. You&apos;ll be notified as soon as you&apos;re approved and your profile goes live on the marketplace.
+            Check your inbox for a confirmation email. You&apos;ll be notified as soon as you&apos;re approved.
           </p>
           <a href="/coach/dashboard" className="inline-block bg-black text-[#D7D7D7] px-8 py-3 text-sm font-semibold hover:bg-[#007B6F] transition-colors">
             Go to your dashboard →
@@ -565,54 +671,252 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#D7D7D7]">
-      <div className="border-b-2 border-black bg-[#D7D7D7] sticky top-0 z-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div className="h-screen overflow-hidden flex bg-[#D7D7D7]">
+
+      {/* ── Left sidebar ── */}
+      <div className="w-[440px] flex-shrink-0 border-r-2 border-black flex flex-col overflow-hidden bg-[#D7D7D7]">
+
+        {/* Header */}
+        <div className="border-b-2 border-black px-6 py-4 flex-shrink-0">
           <span className="text-lg tracking-tight font-bold" style={{ fontFamily: "var(--font-anton)" }}>
             <span>SHOT</span><span className="text-[#007B6F]">SPOT</span>
           </span>
-          <p className="text-xs text-black/40">Step {step} of {TOTAL_STEPS}</p>
+          <p className="text-xs text-black/40 mt-0.5">Build your coach profile</p>
         </div>
-      </div>
-      <div className="border-b border-black/10 bg-[#D7D7D7]">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center">
-          {STEP_LABELS.map((label, i) => (
-            <>
-              <div key={i} className="flex items-center gap-1.5 shrink-0">
-                <StepLabel step={i + 1} label={label} current={step} />
+
+        {/* Scrollable sections */}
+        <div className="flex-1 overflow-y-auto">
+
+          {/* Identity */}
+          <SidebarSection title="Identity" open={sections.identity} onToggle={() => toggle("identity")}>
+            <div>
+              <FieldLabel required>Full name</FieldLabel>
+              <Input value={data.full_name} onChange={(e) => update({ full_name: e.target.value })} placeholder="Your full name" />
+            </div>
+            <div>
+              <FieldLabel>Organization / Club</FieldLabel>
+              <Input value={data.organization} onChange={(e) => update({ organization: e.target.value })} placeholder="e.g. Webb Throws Academy" />
+            </div>
+            <div>
+              <FieldLabel>Coaching format</FieldLabel>
+              <div className="flex gap-2">
+                {[{ value: true, label: "Remote" }, { value: false, label: "In-Person" }].map((opt) => (
+                  <button
+                    key={String(opt.value)}
+                    type="button"
+                    onClick={() => update({ remote: opt.value })}
+                    className={`flex-1 py-2 text-sm font-semibold border-2 transition-colors ${
+                      data.remote === opt.value ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
-              {i < STEP_LABELS.length - 1 && <div key={`line-${i}`} className="flex-1 h-px bg-black/15 mx-2" />}
-            </>
-          ))}
+            </div>
+            <div>
+              <FieldLabel required={!data.remote}>
+                Location{data.remote ? " (optional)" : ""}
+              </FieldLabel>
+              <Input value={data.location} onChange={(e) => update({ location: e.target.value })} placeholder="City, State (e.g. Eugene, OR)" />
+              {data.remote && <p className="text-xs text-black/30 mt-1">Helps athletes know your time zone.</p>}
+            </div>
+            <div className="flex gap-4 items-start">
+              <ImageUploadButton
+                label="Profile photo"
+                hint="Upload photo"
+                previewUrl={avatarUrl}
+                aspect="square"
+                onFile={handleAvatarFile}
+                uploading={uploadingAvatar}
+              />
+              <ImageUploadButton
+                label="Banner image"
+                hint="Upload a wide banner image"
+                previewUrl={bannerUrl}
+                aspect="banner"
+                onFile={handleBannerFile}
+                uploading={uploadingBanner}
+              />
+            </div>
+          </SidebarSection>
+
+          {/* About */}
+          <SidebarSection title="About" open={sections.about} onToggle={() => toggle("about")}>
+            <div>
+              <FieldLabel required>Events you coach</FieldLabel>
+              <div className="flex flex-wrap gap-2">
+                {EVENTS.map((e) => (
+                  <button
+                    key={e.key}
+                    type="button"
+                    onClick={() => update({ events: data.events.includes(e.key) ? data.events.filter((k) => k !== e.key) : [...data.events, e.key] })}
+                    className={`px-4 py-2 text-sm font-semibold border-2 transition-colors ${
+                      data.events.includes(e.key) ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"
+                    }`}
+                  >
+                    {e.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <FieldLabel required>Years coaching</FieldLabel>
+              <Input type="number" min={0} max={60} value={data.years_coaching || ""} onChange={(e) => update({ years_coaching: Number(e.target.value) })} placeholder="e.g. 10" className="max-w-[140px]" />
+            </div>
+            <div>
+              <FieldLabel required>Coaching bio</FieldLabel>
+              <Textarea rows={5} maxLength={600} value={data.short_bio} onChange={(e) => update({ short_bio: e.target.value })} placeholder="Tell athletes who you are, what you coach, and what makes your approach different." />
+              <p className="text-xs text-black/30 mt-1">{data.short_bio.length}/600</p>
+            </div>
+          </SidebarSection>
+
+          {/* Links */}
+          <SidebarSection title="Links" open={sections.links} onToggle={() => toggle("links")}>
+            <LinksSection links={data.links} onChange={(links) => update({ links })} />
+          </SidebarSection>
+
+          {/* Experience */}
+          <SidebarSection title="Experience" open={sections.experience} onToggle={() => toggle("experience")}>
+            {data.coaching_history.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-xs text-black/30 mb-3">No experience added yet</p>
+                <button
+                  type="button"
+                  onClick={() => update({ coaching_history: [...data.coaching_history, { role: "", organization: "", start_year: new Date().getFullYear(), end_year: null, description: "" }] })}
+                  className="bg-black text-[#D7D7D7] px-5 py-2 text-xs font-semibold hover:bg-[#007B6F] transition-colors"
+                >
+                  + Add your first role
+                </button>
+              </div>
+            ) : (
+              <div>
+                {data.coaching_history.map((entry, i) => (
+                  <HistoryEntryForm
+                    key={i}
+                    entry={entry}
+                    index={i}
+                    onChange={(p) => update({ coaching_history: data.coaching_history.map((e, idx) => idx === i ? { ...e, ...p } : e) })}
+                    onRemove={() => update({ coaching_history: data.coaching_history.filter((_, idx) => idx !== i) })}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => update({ coaching_history: [...data.coaching_history, { role: "", organization: "", start_year: new Date().getFullYear(), end_year: null, description: "" }] })}
+                  className="border-2 border-black px-5 py-2 text-xs font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors"
+                >
+                  + Add another role
+                </button>
+              </div>
+            )}
+          </SidebarSection>
+
+          {/* Packages */}
+          <SidebarSection title="Packages" open={sections.packages} onToggle={() => toggle("packages")}>
+            <PackageEditorSection data={data} onChange={update} />
+          </SidebarSection>
+
+          {/* Settings */}
+          <SidebarSection title="Settings" open={sections.settings} onToggle={() => toggle("settings")}>
+            <div>
+              <FieldLabel required>Enrollment type</FieldLabel>
+              <div className="flex flex-col gap-2">
+                {[
+                  { value: "instant_join" as const, label: "Instant Join", sub: "Athletes pay and join immediately" },
+                  { value: "application_required" as const, label: "Application Required", sub: "You review each athlete before accepting" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => update({ intake_mode: opt.value })}
+                    className={`p-3 text-left border-2 transition-colors ${
+                      data.intake_mode === opt.value ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">{opt.label}</p>
+                    <p className={`text-xs mt-0.5 ${data.intake_mode === opt.value ? "text-white/60" : "text-black/40"}`}>{opt.sub}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FieldLabel required>Max athletes</FieldLabel>
+                <Input type="number" min={1} max={200} value={data.athlete_capacity || ""} onChange={(e) => update({ athlete_capacity: Number(e.target.value) })} placeholder="e.g. 15" />
+              </div>
+              <div>
+                <FieldLabel required>Response time</FieldLabel>
+                <Select value={data.response_time} onChange={(e) => update({ response_time: e.target.value })}>
+                  <option value="">Select…</option>
+                  <option value="24hr">Within 24 hours</option>
+                  <option value="48hr">Within 48 hours</option>
+                  <option value="72hr">Within 72 hours</option>
+                </Select>
+              </div>
+            </div>
+            <p className="text-xs text-black/40 border-t border-black/10 pt-3">
+              ShotSpot charges a 15% platform fee. Your listed price is what athletes see.
+            </p>
+          </SidebarSection>
+
+          <div className="h-4" />
+        </div>
+
+        {/* Footer */}
+        <div className="border-t-2 border-black p-4 flex-shrink-0 space-y-3 bg-[#D7D7D7]">
+          {error && (
+            <div className="border-2 border-red-500 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</div>
+          )}
+          <button
+            type="button"
+            onClick={submit}
+            disabled={submitting}
+            className="w-full bg-[#007B6F] text-white py-3 text-sm font-semibold hover:bg-[#005a51] transition-colors disabled:opacity-50"
+          >
+            {submitting ? "Submitting…" : "Submit for Review →"}
+          </button>
+          <p className="text-xs text-black/30 text-center">We review profiles within 1–2 business days</p>
         </div>
       </div>
-      <div className={`${step === 4 ? "max-w-5xl" : "max-w-3xl"} mx-auto px-4 sm:px-6 py-10`}>
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl tracking-tight leading-none mb-2" style={{ fontFamily: "var(--font-anton)" }}>{STEP_TITLES[step]}</h1>
-          <p className="text-sm text-black/50">{STEP_SUBTITLES[step]}</p>
+
+      {/* ── Right preview panel ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Preview header */}
+        <div className="border-b-2 border-black px-6 py-3 flex-shrink-0 flex items-center justify-between bg-[#D7D7D7]">
+          <p className="text-xs font-bold uppercase tracking-widest text-black/30" style={{ fontFamily: "var(--font-anton)" }}>
+            Profile Preview
+          </p>
+          <p className="text-xs text-black/30">Updates as you type</p>
         </div>
-        {error && <div className="border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-700 mb-6">{error}</div>}
-        {step === 4 ? (
-          <div className="mb-8"><Step4 data={data} onChange={update} /></div>
-        ) : (
-          <div className={`bg-[#D7D7D7] border-2 border-black mb-8 ${step === 3 ? "p-6" : "p-6 sm:p-8"}`}>
-            {step === 1 && <Step1 data={data} onChange={update} />}
-            {step === 2 && <Step2 data={data} onChange={update} />}
-            {step === 3 && <Step3 data={data} onChange={update} />}
-            {step === 5 && <Step5 data={data} />}
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          {step > 1 ? (
-            <button type="button" onClick={back} className="border-2 border-black px-6 py-2.5 text-sm font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors">← Back</button>
-          ) : <div />}
-          {step < TOTAL_STEPS ? (
-            <button type="button" onClick={next} className="bg-black text-[#D7D7D7] px-8 py-2.5 text-sm font-semibold hover:bg-[#007B6F] transition-colors">Continue →</button>
-          ) : (
-            <button type="button" onClick={submit} disabled={submitting} className="bg-[#007B6F] text-white px-8 py-2.5 text-sm font-semibold hover:bg-[#005a51] transition-colors disabled:opacity-50">
-              {submitting ? "Submitting..." : "Submit for Review"}
-            </button>
-          )}
+
+        {/* Scrollable preview */}
+        <div className="flex-1 overflow-y-auto p-6 bg-black/[0.04]">
+          <CoachProfilePreview data={data} avatarUrl={avatarUrl} bannerUrl={bannerUrl} profileStyle={profileStyle} />
+        </div>
+
+        {/* Style picker */}
+        <div className="border-t-2 border-black px-6 py-3 flex-shrink-0 flex items-center gap-4 bg-[#D7D7D7]">
+          <p className="text-xs font-bold uppercase tracking-widest text-black/40" style={{ fontFamily: "var(--font-anton)" }}>
+            Banner color
+          </p>
+          {([
+            { value: "light" as const, bg: "#C0C0C0" },
+            { value: "dark" as const,  bg: "#000000" },
+            { value: "teal" as const,  bg: "#007B6F" },
+          ]).map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => setProfileStyle(s.value)}
+              title={s.value}
+              className={`w-7 h-7 border-2 transition-all ${
+                profileStyle === s.value ? "ring-2 ring-offset-2 ring-black scale-110 border-transparent" : "border-black/20 hover:border-black"
+              }`}
+              style={{ backgroundColor: s.bg }}
+            />
+          ))}
+          {bannerUrl && <span className="text-xs text-black/30 ml-1">(image overrides color)</span>}
         </div>
       </div>
     </div>

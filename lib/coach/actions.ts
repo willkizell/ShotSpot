@@ -6,24 +6,21 @@ import { sendCoachSubmissionAlert } from "@/lib/email";
 import type { CoachingHistoryEntry, CoachPackage, CoachLink } from "@/lib/types/coach";
 
 export interface OnboardingData {
-  // Step 1
   full_name: string;
   organization: string;
   location: string;
   remote: boolean;
-  // Step 2
   events: string[];
   years_coaching: number;
   short_bio: string;
-  // Step 3
   coaching_history: CoachingHistoryEntry[];
-  // Step 2 (links)
   links: CoachLink[];
-  // Step 4
   intake_mode: "instant_join" | "application_required";
   packages: CoachPackage[];
   athlete_capacity: number;
   response_time: string;
+  avatar_url?: string | null;
+  banner_url?: string | null;
 }
 
 export async function submitCoachProfile(data: OnboardingData) {
@@ -60,6 +57,8 @@ export async function submitCoachProfile(data: OnboardingData) {
     athlete_capacity: data.athlete_capacity,
     starting_price: startingPrice,
     response_time: data.response_time,
+    avatar_url: data.avatar_url ?? null,
+    banner_url: data.banner_url ?? null,
     status: "pending",
   });
 
