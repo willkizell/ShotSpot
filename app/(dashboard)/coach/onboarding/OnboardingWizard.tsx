@@ -231,132 +231,195 @@ function newPackage(): CoachPackage {
   return { id: Math.random().toString(36).slice(2), name: "", description: "", price: 0, billing_cadence: "monthly", includes: [] };
 }
 
-function PackageForm({ pkg, index, onChange, onRemove }: { pkg: CoachPackage; index: number; onChange: (p: Partial<CoachPackage>) => void; onRemove: () => void }) {
-  const toggle = (opt: string) => onChange({ includes: pkg.includes.includes(opt) ? pkg.includes.filter((i) => i !== opt) : [...pkg.includes, opt] });
+function PackagePreview({ pkg }: { pkg: CoachPackage }) {
+  const cadenceLabel: Record<string, string> = { monthly: "/ month", weekly: "/ week", one_time: "one-time" };
   return (
-    <div className="border-2 border-black overflow-hidden">
-      {/* Card header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-black">
-        <span className="text-xs font-bold uppercase tracking-widest text-white/60" style={{ fontFamily: "var(--font-anton)" }}>
-          Package {index + 1}
-        </span>
-        <button type="button" onClick={onRemove} className="text-xs text-white/40 hover:text-white transition-colors">
-          Remove ×
-        </button>
+    <div className="border-2 border-black bg-[#D7D7D7] flex flex-col h-full">
+      <div className="p-5 border-b-2 border-black">
+        <p className="text-xs uppercase tracking-widest text-black/40 mb-2" style={{ fontFamily: "var(--font-anton)" }}>Coaching Package</p>
+        <h3 className="text-2xl tracking-tight leading-none mb-3" style={{ fontFamily: "var(--font-anton)" }}>
+          {pkg.name || <span className="text-black/25 italic font-normal text-base" style={{ fontFamily: "inherit" }}>Package name</span>}
+        </h3>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-4xl font-bold tracking-tight">{pkg.price > 0 ? `$${pkg.price}` : <span className="text-black/25">$—</span>}</span>
+          <span className="text-sm text-black/50">{cadenceLabel[pkg.billing_cadence]}</span>
+        </div>
       </div>
-      {/* Card body */}
-      <div className="p-6 space-y-5">
-        {/* Name — prominent */}
-        <Input
-          value={pkg.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-          placeholder='Package name — e.g. "Technical Analysis" or "Full Training"'
-          className="text-base font-semibold"
-        />
-        {/* Price + billing side by side */}
-        <div className="flex flex-wrap items-end gap-4">
-          <div>
-            <FieldLabel required>Price (USD)</FieldLabel>
-            <div className="flex items-center border-2 border-black bg-transparent focus-within:ring-2 focus-within:ring-[#007B6F]">
-              <span className="pl-3 pr-1 text-sm font-semibold text-black/40">$</span>
-              <input
-                type="number" min={0}
-                value={pkg.price || ""}
-                onChange={(e) => onChange({ price: Number(e.target.value) })}
-                placeholder="0"
-                className="w-28 py-2.5 pr-3 text-sm bg-transparent focus:outline-none"
-              />
-            </div>
-          </div>
-          <div>
-            <FieldLabel required>Billing</FieldLabel>
-            <div className="flex gap-2">
-              {([{ value: "monthly", label: "Monthly" }, { value: "weekly", label: "Weekly" }, { value: "one_time", label: "One-time" }] as const).map((opt) => (
-                <button key={opt.value} type="button"
-                  onClick={() => onChange({ billing_cadence: opt.value })}
-                  className={`px-4 py-2.5 text-sm font-semibold border-2 transition-colors ${pkg.billing_cadence === opt.value ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/30 hover:border-black"}`}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      {pkg.description && (
+        <div className="px-5 pt-4">
+          <p className="text-sm text-black/70 leading-relaxed">{pkg.description}</p>
         </div>
-        {/* Includes pills */}
-        <div>
-          <FieldLabel>What&apos;s included</FieldLabel>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {INCLUDE_OPTIONS.map((opt) => (
-              <button key={opt} type="button" onClick={() => toggle(opt)}
-                className={`px-3 py-2 text-xs font-medium border-2 transition-colors ${pkg.includes.includes(opt) ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/20 hover:border-black"}`}>
-                {pkg.includes.includes(opt) ? "✓ " : ""}{opt}
-              </button>
+      )}
+      <div className="p-5 flex-1">
+        {pkg.includes.length === 0 ? (
+          <p className="text-xs text-black/30 italic">Toggle items on the left to see what&apos;s included</p>
+        ) : (
+          <ul className="space-y-2.5">
+            {pkg.includes.map((item) => (
+              <li key={item} className="flex items-center gap-2.5 text-sm">
+                <div className="w-5 h-5 bg-[#007B6F] flex items-center justify-center flex-shrink-0">
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+                {item}
+              </li>
             ))}
-          </div>
+          </ul>
+        )}
+      </div>
+      <div className="px-5 pb-5 border-t border-black/10 pt-4">
+        <div className="bg-black text-[#D7D7D7] text-center py-3 text-sm font-semibold opacity-40 select-none">
+          Apply to work together
         </div>
-        {/* Description */}
-        <Input
-          value={pkg.description}
-          onChange={(e) => onChange({ description: e.target.value })}
-          placeholder="One-line description for athletes — e.g. Weekly video review + written technical cues (optional)"
-        />
+        <p className="text-xs text-center text-black/25 mt-2">Preview only — not live</p>
       </div>
     </div>
   );
 }
 
 function Step4({ data, onChange }: { data: OnboardingData; onChange: (p: Partial<OnboardingData>) => void }) {
-  const addPkg = () => onChange({ packages: [...data.packages, newPackage()] });
-  const updatePkg = (i: number, patch: Partial<CoachPackage>) => onChange({ packages: data.packages.map((p, idx) => idx === i ? { ...p, ...patch } : p) });
-  const removePkg = (i: number) => onChange({ packages: data.packages.filter((_, idx) => idx !== i) });
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const addPkg = () => {
+    const updated = [...data.packages, newPackage()];
+    onChange({ packages: updated });
+    setActiveIdx(updated.length - 1);
+  };
+  const updatePkg = (i: number, patch: Partial<CoachPackage>) =>
+    onChange({ packages: data.packages.map((p, idx) => (idx === i ? { ...p, ...patch } : p)) });
+  const removePkg = (i: number) => {
+    const updated = data.packages.filter((_, idx) => idx !== i);
+    onChange({ packages: updated });
+    setActiveIdx(Math.min(activeIdx, Math.max(0, updated.length - 1)));
+  };
+
+  const active = data.packages[activeIdx] ?? null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Enrollment + roster/response in one settings row */}
+      <div className="border-2 border-black p-5 space-y-5">
+        <div>
+          <FieldLabel required>Enrollment type</FieldLabel>
+          <div className="flex gap-3 mt-1">
+            {[{ value: "instant_join", label: "Instant Join", sub: "Athletes pay and join immediately" }, { value: "application_required", label: "Application Required", sub: "You review each athlete before accepting" }].map((opt) => (
+              <button key={opt.value} type="button" onClick={() => onChange({ intake_mode: opt.value as OnboardingData["intake_mode"] })}
+                className={`flex-1 p-3 text-left border-2 transition-colors ${data.intake_mode === opt.value ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
+                <p className="text-sm font-semibold">{opt.label}</p>
+                <p className={`text-xs mt-0.5 ${data.intake_mode === opt.value ? "text-white/60" : "text-black/40"}`}>{opt.sub}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-5">
+          <div>
+            <FieldLabel required>Max athletes on roster</FieldLabel>
+            <Input type="number" min={1} max={200} value={data.athlete_capacity || ""} onChange={(e) => onChange({ athlete_capacity: Number(e.target.value) })} placeholder="e.g. 15" />
+          </div>
+          <div>
+            <FieldLabel required>Typical response time</FieldLabel>
+            <Select value={data.response_time} onChange={(e) => onChange({ response_time: e.target.value })}>
+              <option value="">Select...</option>
+              <option value="24hr">Within 24 hours</option>
+              <option value="48hr">Within 48 hours</option>
+              <option value="72hr">Within 72 hours</option>
+            </Select>
+          </div>
+        </div>
+        <p className="text-xs text-black/40 border-t border-black/10 pt-4">ShotSpot charges a 15% platform fee on completed payments. Your listed price is what athletes see.</p>
+      </div>
+
+      {/* Package builder */}
       <div>
-        <FieldLabel required>Enrollment type</FieldLabel>
-        <div className="flex gap-3 mt-1">
-          {[{ value: "instant_join", label: "Instant Join", sub: "Athletes pay and join immediately" }, { value: "application_required", label: "Application Required", sub: "You review each athlete before accepting" }].map((opt) => (
-            <button key={opt.value} type="button" onClick={() => onChange({ intake_mode: opt.value as OnboardingData["intake_mode"] })}
-              className={`flex-1 p-3 text-left border-2 transition-colors ${data.intake_mode === opt.value ? "bg-black text-[#D7D7D7] border-black" : "border-black/30 hover:border-black"}`}>
-              <p className="text-sm font-semibold">{opt.label}</p>
-              <p className={`text-xs mt-0.5 ${data.intake_mode === opt.value ? "text-white/60" : "text-black/40"}`}>{opt.sub}</p>
+        <div className="flex items-center gap-0 mb-0 border-2 border-b-0 border-black overflow-x-auto">
+          {data.packages.map((pkg, i) => (
+            <button key={pkg.id} type="button" onClick={() => setActiveIdx(i)}
+              className={`px-5 py-3 text-sm font-semibold border-r-2 border-black flex-shrink-0 transition-colors ${i === activeIdx ? "bg-black text-[#D7D7D7]" : "hover:bg-black/5"}`}>
+              {pkg.name.trim() || `Package ${i + 1}`}
             </button>
           ))}
+          <button type="button" onClick={addPkg}
+            className="px-5 py-3 text-sm font-semibold text-[#007B6F] hover:bg-[#007B6F]/10 flex-shrink-0 transition-colors">
+            + Add package
+          </button>
+          <div className="flex-1" />
+          {active && data.packages.length > 1 && (
+            <button type="button" onClick={() => removePkg(activeIdx)}
+              className="px-4 py-3 text-xs text-black/30 hover:text-red-500 border-l-2 border-black flex-shrink-0 transition-colors">
+              Remove ×
+            </button>
+          )}
         </div>
-      </div>
 
-      <div>
-        <div className="flex items-baseline justify-between mb-1">
-          <FieldLabel required>Coaching packages</FieldLabel>
-          <span className="text-xs text-black/40">{data.packages.length} package{data.packages.length !== 1 ? "s" : ""}</span>
-        </div>
-        <p className="text-xs text-black/50 mb-4">Create one or more tiers athletes can choose from — e.g. video-only, full training, elite. At least one required.</p>
-        <div className="space-y-4">
-          {data.packages.map((pkg, i) => (
-            <PackageForm key={pkg.id} pkg={pkg} index={i} onChange={(p) => updatePkg(i, p)} onRemove={() => removePkg(i)} />
-          ))}
-        </div>
-        <button type="button" onClick={addPkg} className="border-2 border-black w-full py-3 text-sm font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors mt-2">
-          + Add another package
-        </button>
+        {data.packages.length === 0 ? (
+          <div className="border-2 border-black p-12 text-center">
+            <p className="text-sm text-black/40 mb-4">No packages yet.</p>
+            <button type="button" onClick={addPkg} className="bg-black text-[#D7D7D7] px-6 py-2.5 text-sm font-semibold hover:bg-[#007B6F] transition-colors">
+              + Create first package
+            </button>
+          </div>
+        ) : active && (
+          <div className="border-2 border-black grid grid-cols-2">
+            {/* Left: editor */}
+            <div className="border-r-2 border-black p-6 space-y-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-black/30" style={{ fontFamily: "var(--font-anton)" }}>Configure</p>
+              <Input
+                value={active.name}
+                onChange={(e) => updatePkg(activeIdx, { name: e.target.value })}
+                placeholder='"Technical Analysis", "Full Training", "Elite"…'
+                className="text-base font-semibold"
+              />
+              <div>
+                <FieldLabel required>Price & billing</FieldLabel>
+                <div className="flex gap-2 mt-1">
+                  <div className="flex items-center border-2 border-black focus-within:ring-2 focus-within:ring-[#007B6F]">
+                    <span className="pl-3 text-sm font-semibold text-black/40">$</span>
+                    <input type="number" min={0} value={active.price || ""}
+                      onChange={(e) => updatePkg(activeIdx, { price: Number(e.target.value) })}
+                      placeholder="0" className="w-24 py-2.5 px-2 text-sm bg-transparent focus:outline-none" />
+                  </div>
+                  {([{ value: "monthly", label: "Monthly" }, { value: "weekly", label: "Weekly" }, { value: "one_time", label: "One-time" }] as const).map((opt) => (
+                    <button key={opt.value} type="button"
+                      onClick={() => updatePkg(activeIdx, { billing_cadence: opt.value })}
+                      className={`px-3 py-2.5 text-xs font-semibold border-2 transition-colors ${active.billing_cadence === opt.value ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/30 hover:border-black"}`}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <FieldLabel>What&apos;s included</FieldLabel>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {INCLUDE_OPTIONS.map((opt) => {
+                    const on = active.includes.includes(opt);
+                    return (
+                      <button key={opt} type="button"
+                        onClick={() => updatePkg(activeIdx, { includes: on ? active.includes.filter((x) => x !== opt) : [...active.includes, opt] })}
+                        className={`px-2.5 py-1.5 text-xs font-medium border-2 transition-colors ${on ? "bg-[#007B6F] border-[#007B6F] text-white" : "border-black/20 hover:border-black"}`}>
+                        {on ? "✓ " : ""}{opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <FieldLabel>Description for athletes</FieldLabel>
+                <Textarea rows={3} value={active.description}
+                  onChange={(e) => updatePkg(activeIdx, { description: e.target.value })}
+                  placeholder="What makes this package great? Athletes read this before applying." />
+              </div>
+            </div>
+            {/* Right: live preview */}
+            <div className="flex flex-col bg-black/[0.03]">
+              <div className="px-6 pt-5 pb-3 border-b border-black/10">
+                <p className="text-xs font-bold uppercase tracking-widest text-black/30" style={{ fontFamily: "var(--font-anton)" }}>Athlete view — live preview</p>
+              </div>
+              <div className="p-6 flex-1">
+                <PackagePreview pkg={active} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      <div className="grid grid-cols-2 gap-5">
-        <div>
-          <FieldLabel required>Max athletes on roster</FieldLabel>
-          <Input type="number" min={1} max={200} value={data.athlete_capacity || ""} onChange={(e) => onChange({ athlete_capacity: Number(e.target.value) })} placeholder="e.g. 15" />
-        </div>
-        <div>
-          <FieldLabel required>Typical response time</FieldLabel>
-          <Select value={data.response_time} onChange={(e) => onChange({ response_time: e.target.value })}>
-            <option value="">Select...</option>
-            <option value="24hr">Within 24 hours</option>
-            <option value="48hr">Within 48 hours</option>
-            <option value="72hr">Within 72 hours</option>
-          </Select>
-        </div>
-      </div>
-
-      <p className="text-xs text-black/40 border-t border-black/10 pt-4">ShotSpot charges a 15% platform fee on completed payments. Your listed price is what athletes see.</p>
     </div>
   );
 }
@@ -523,19 +586,22 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
           ))}
         </div>
       </div>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      <div className={`${step === 4 ? "max-w-5xl" : "max-w-3xl"} mx-auto px-4 sm:px-6 py-10`}>
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl tracking-tight leading-none mb-2" style={{ fontFamily: "var(--font-anton)" }}>{STEP_TITLES[step]}</h1>
           <p className="text-sm text-black/50">{STEP_SUBTITLES[step]}</p>
         </div>
         {error && <div className="border-2 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-700 mb-6">{error}</div>}
-        <div className={`bg-[#D7D7D7] border-2 border-black mb-8 ${step === 3 || step === 4 ? "p-6" : "p-6 sm:p-8"}`}>
-          {step === 1 && <Step1 data={data} onChange={update} />}
-          {step === 2 && <Step2 data={data} onChange={update} />}
-          {step === 3 && <Step3 data={data} onChange={update} />}
-          {step === 4 && <Step4 data={data} onChange={update} />}
-          {step === 5 && <Step5 data={data} />}
-        </div>
+        {step === 4 ? (
+          <div className="mb-8"><Step4 data={data} onChange={update} /></div>
+        ) : (
+          <div className={`bg-[#D7D7D7] border-2 border-black mb-8 ${step === 3 ? "p-6" : "p-6 sm:p-8"}`}>
+            {step === 1 && <Step1 data={data} onChange={update} />}
+            {step === 2 && <Step2 data={data} onChange={update} />}
+            {step === 3 && <Step3 data={data} onChange={update} />}
+            {step === 5 && <Step5 data={data} />}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           {step > 1 ? (
             <button type="button" onClick={back} className="border-2 border-black px-6 py-2.5 text-sm font-semibold hover:bg-black hover:text-[#D7D7D7] transition-colors">← Back</button>
