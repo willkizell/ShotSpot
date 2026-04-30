@@ -27,17 +27,19 @@ export async function approveCoach(coachId: string) {
     .eq("id", coachId);
   if (error) return { error: error.message };
 
-  // Email the coach
+  // Email the coach — fetch email from users table directly
   const { data: coachData } = await supabase
     .from("coach_profiles")
-    .select("full_name, users(email)")
+    .select("full_name")
     .eq("id", coachId)
     .single();
-  if (coachData) {
-    const email = (coachData.users as { email: string } | null)?.email;
-    if (email) {
-      sendCoachApprovedEmail({ coachName: coachData.full_name, coachEmail: email, coachId }).catch(() => {});
-    }
+  const { data: userData } = await supabase
+    .from("users")
+    .select("email")
+    .eq("id", coachId)
+    .single();
+  if (coachData && userData?.email) {
+    sendCoachApprovedEmail({ coachName: coachData.full_name, coachEmail: userData.email, coachId }).catch(() => {});
   }
 
   return { success: true };
@@ -60,14 +62,16 @@ export async function rejectCoach(coachId: string, reason: string) {
   // Email the coach
   const { data: coachData } = await supabase
     .from("coach_profiles")
-    .select("full_name, users(email)")
+    .select("full_name")
     .eq("id", coachId)
     .single();
-  if (coachData) {
-    const email = (coachData.users as { email: string } | null)?.email;
-    if (email) {
-      sendCoachRejectedEmail({ coachName: coachData.full_name, coachEmail: email, reason }).catch(() => {});
-    }
+  const { data: userData } = await supabase
+    .from("users")
+    .select("email")
+    .eq("id", coachId)
+    .single();
+  if (coachData && userData?.email) {
+    sendCoachRejectedEmail({ coachName: coachData.full_name, coachEmail: userData.email, reason }).catch(() => {});
   }
 
   return { success: true };

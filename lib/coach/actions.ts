@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { sendCoachSubmissionAlert } from "@/lib/email";
 import type { CoachingHistoryEntry, CoachPackage, CoachLink } from "@/lib/types/coach";
