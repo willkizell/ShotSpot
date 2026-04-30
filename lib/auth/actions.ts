@@ -6,18 +6,25 @@ import type { UserRole } from "@/types/database";
 
 export async function signInWithEmail(email: string, password: string) {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
 
+  const userId = signInData.user.id;
+
+  // Fall back to user_metadata role if public.users row doesn't exist yet
   const { data: userData } = await supabase
     .from("users")
     .select("role")
-    .single();
+    .eq("id", userId)
+    .maybeSingle();
 
-  if (userData?.role === "coach") {
+  const role = userData?.role ?? signInData.user.user_metadata?.role;
+
+  if (role === "coach") {
     const { data: profile } = await supabase
       .from("coach_profiles")
       .select("id")
+      .eq("id", userId)
       .maybeSingle();
     redirect(profile ? "/coach/dashboard" : "/coach/onboarding");
   }
@@ -26,7 +33,7 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signUpAsAthlete(email: string, password: string, fullName: string) {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -34,12 +41,20 @@ export async function signUpAsAthlete(email: string, password: string, fullName:
     },
   });
   if (error) return { error: error.message };
+  if (data.user) {
+    await supabase.from("users").upsert({
+      id: data.user.id,
+      email: data.user.email!,
+      full_name: fullName,
+      role: "athlete" satisfies UserRole,
+    });
+  }
   redirect("/athlete/dashboard");
 }
 
 export async function signUpAsCoach(email: string, password: string, fullName: string) {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -47,6 +62,14 @@ export async function signUpAsCoach(email: string, password: string, fullName: s
     },
   });
   if (error) return { error: error.message };
+  if (data.user) {
+    await supabase.from("users").upsert({
+      id: data.user.id,
+      email: data.user.email!,
+      full_name: fullName,
+      role: "coach" satisfies UserRole,
+    });
+  }
   redirect("/coach/onboarding");
 }
 
