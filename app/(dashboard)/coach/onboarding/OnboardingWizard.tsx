@@ -58,10 +58,6 @@ function Step1({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
         <Input value={data.organization} onChange={(e) => onChange({ organization: e.target.value })} placeholder="e.g. Webb Throws Academy" />
       </div>
       <div>
-        <FieldLabel required>Your location</FieldLabel>
-        <Input value={data.location} onChange={(e) => onChange({ location: e.target.value })} placeholder="City, State (e.g. Eugene, OR)" />
-      </div>
-      <div>
         <FieldLabel>Coaching format</FieldLabel>
         <div className="flex gap-3 mt-1">
           {[{ value: true, label: "Remote" }, { value: false, label: "In-Person" }].map((opt) => (
@@ -71,8 +67,13 @@ function Step1({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
             </button>
           ))}
         </div>
-        <p className="text-xs text-black/40 mt-1.5">Choose Remote if you coach athletes online. You can update this later.</p>
       </div>
+      <div>
+        <FieldLabel required={!data.remote}>Your location{data.remote ? " (optional)" : ""}</FieldLabel>
+        <Input value={data.location} onChange={(e) => onChange({ location: e.target.value })} placeholder="City, State (e.g. Eugene, OR)" />
+        {data.remote && <p className="text-xs text-black/40 mt-1">Helpful for athletes to know your time zone, but not required for remote coaching.</p>}
+      </div>
+      <LinksSection links={data.links} onChange={(links) => onChange({ links })} />
     </div>
   );
 }
@@ -148,7 +149,6 @@ function Step2({ data, onChange }: { data: OnboardingData; onChange: (p: Partial
         <Textarea rows={5} maxLength={600} value={data.short_bio} onChange={(e) => onChange({ short_bio: e.target.value })} placeholder="Tell athletes who you are, what you coach, and what makes your approach different." />
         <p className="text-xs text-black/40 mt-1">{data.short_bio.length}/600 characters</p>
       </div>
-      <LinksSection links={data.links} onChange={(links) => onChange({ links })} />
     </div>
   );
 }
@@ -378,7 +378,7 @@ const STEP_TITLES = ["", "Basic Info", "Your Coaching", "Experience", "Availabil
 function validate(step: number, data: OnboardingData): string | null {
   if (step === 1) {
     if (!data.full_name.trim()) return "Full name is required.";
-    if (!data.location.trim()) return "Location is required.";
+    if (!data.remote && !data.location.trim()) return "Location is required for in-person coaches.";
   }
   if (step === 2) {
     if (data.events.length === 0) return "Select at least one event.";
